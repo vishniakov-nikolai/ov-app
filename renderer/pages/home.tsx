@@ -2,9 +2,12 @@ import React from 'react'
 import Head from 'next/head'
 import Link from 'next/link'
 import Image from 'next/image'
+import Editor from '@monaco-editor/react';
 
 export default function HomePage() {
-  const [message, setMessage] = React.useState('No message found')
+  const [message, setMessage] = React.useState('No message found');
+  const codeSample = `// Add openvino-node package
+const { ov: addon } = require('openvino-node');`;
 
   React.useEffect(() => {
     window.ipc.on('message', (message: string) => {
@@ -37,6 +40,7 @@ export default function HomePage() {
           Test IPC
         </button>
         <p>{message}</p>
+        <Editor height="90vh" defaultLanguage="javascript" defaultValue={codeSample} />;
       </div>
     </React.Fragment>
   )
