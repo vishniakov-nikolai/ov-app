@@ -13,7 +13,8 @@
   "dependencies": {
     "@monaco-editor/react": "^4.6.0",
     "electron-serve": "^1.3.0",
-    "electron-store": "^8.2.0"
+    "electron-store": "^8.2.0",
+    "openvino-node": "^2024.2.0"
   },
   "devDependencies": {
     "@types/node": "^20.11.16",

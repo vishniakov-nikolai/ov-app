@@ -1,0 +1,39 @@
+{
+    "name": "@spark-design/fonts",
+    "version": "1.1.4-alpha.2",
+    "description": "Spark Island Fonts",
+    "main": "index.js",
+    "gitHead": "586382e2857f0056df7c9b7c5998a513bad6eb5d",
+    "scripts": {
+        "fonts:build": "node gen-fonts-css.cjs"
+    },
+    "keywords": [
+        "Spark Island",
+        "Design System",
+        "Fonts"
+    ],
+    "files": [
+        "fonts.css",
+        "index.js",
+        "intel-one-display/*",
+        "intel-one-mono/*",
+        "intel-one-text/*"
+    ],
+    "author": "anabwan",
+    "contributors": [
+        {
+            "name": "geranabwan",
+            "email": "ayoob.nabwani@intel.com"
+        },
+        {
+            "name": "gerjacekjan",
+            "email": "jacek.jankowski@intel.com"
+        }
+    ],
+    "maintainers": [
+        {
+            "name": "geranabwan",
+            "email": "ayoob.nabwani@intel.com"
+        }
+    ]
+}

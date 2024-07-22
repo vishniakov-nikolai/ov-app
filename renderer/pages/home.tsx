@@ -4,6 +4,10 @@ import Link from 'next/link'
 import Image from 'next/image'
 import Editor from '@monaco-editor/react';
 
+function Select() {
+  return <div className="select">Semantic Segmentation</div>
+}
+
 export default function HomePage() {
   const [message, setMessage] = React.useState('No message found');
   const codeSample = `// Add openvino-node package
@@ -18,29 +22,17 @@ const { ov: addon } = require('openvino-node');`;
   return (
     <React.Fragment>
       <Head>
-        <title>Home - Nextron (basic-lang-typescript)</title>
+        <title>OpenVINO JS + Electron Demo</title>
       </Head>
-      <div>
+      <div className="content">
+        <h1>🍷 OpenVINO JS + Electron Demo</h1>
         <p>
-          ⚡ Electron + Next.js ⚡ -<Link href="/next">Go to next page</Link>
+          Select Sample
         </p>
-        <Image
-          src="/images/logo.png"
-          alt="Logo image"
-          width={256}
-          height={256}
-        />
-      </div>
-      <div>
-        <button
-          onClick={() => {
-            window.ipc.send('message', 'Hello')
-          }}
-        >
-          Test IPC
-        </button>
-        <p>{message}</p>
-        <Editor height="90vh" defaultLanguage="javascript" defaultValue={codeSample} />;
+        <Select />
+        <Link className="button" href="/semantic-segmentation">Run Sample</Link>
+        <br />
+        <div id="placeholder" className="placeholder"></div>
       </div>
     </React.Fragment>
   )

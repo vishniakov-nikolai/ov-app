@@ -2,6 +2,7 @@ import path from 'path';
 import { app, ipcMain } from 'electron';
 import serve from 'electron-serve';
 import { createWindow } from './helpers';
+import { addon as ov } from 'openvino-node';
 
 const isProd = process.env.NODE_ENV === 'production';
 
@@ -15,11 +16,13 @@ if (isProd) {
   await app.whenReady();
 
   const mainWindow = createWindow('main', {
-    width: 1000,
-    height: 600,
+    width: 800,
+    height: 800,
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
     },
+    titleBarOverlay: true,
+    autoHideMenuBar: true,
   });
 
   if (isProd) {
@@ -27,7 +30,7 @@ if (isProd) {
   } else {
     const port = process.argv[2];
     await mainWindow.loadURL(`http://localhost:${port}/home`);
-    mainWindow.webContents.openDevTools();
+    // mainWindow.webContents.openDevTools();
   }
 })();
 
@@ -35,6 +38,10 @@ app.on('window-all-closed', () => {
   app.quit();
 });
 
-ipcMain.on('message', async (event, arg) => {
-  event.reply('message', `${arg} World!`);
+ipcMain.on('message', async (event) => {
+  const core = new ov.Core();
+
+  const v = core.getVersions('CPU');
+
+  event.reply('message', v);
 });
