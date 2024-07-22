@@ -10,8 +10,8 @@ export default function HomePage() {
 const { ov: addon } = require('openvino-node');`;
 
   React.useEffect(() => {
-    window.ipc.on('message', (message) => {
-      setMessage(`Uses OpenVINO v${message.CPU.buildNumber}`)
+    window.ipc.on('setBuildNumber', (buildNumber) => {
+      setMessage(`Uses OpenVINO v${buildNumber}`)
     })
   }, [])
 
@@ -30,16 +30,17 @@ const { ov: addon } = require('openvino-node');`;
         <button
           id="uploadButton"
           onClick={() => {
-            window.ipc.send('message', 'Hello')
+            window.ipc.send('getBuildNumber')
           }}
+          className="btn"
         >
           Select Image
         </button>
         <br />
         <div id="placeholder" className="placeholder"></div>
-        <p id="info" className="info">{message}</p>
+        <p id="info" className="mono">{message}</p>
       </div>
-      <div>
+      <div className="border border-black">
         <Editor height="90vh" defaultLanguage="javascript" defaultValue={codeSample} />;
       </div>
     </React.Fragment>

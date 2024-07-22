@@ -1,5 +1,5 @@
 import path from 'path';
-import { app, ipcMain } from 'electron';
+import { app, ipcMain, shell } from 'electron';
 import serve from 'electron-serve';
 import { createWindow } from './helpers';
 import { addon as ov } from 'openvino-node';
@@ -32,16 +32,21 @@ if (isProd) {
     await mainWindow.loadURL(`http://localhost:${port}/home`);
     // mainWindow.webContents.openDevTools();
   }
+
+  mainWindow.webContents.setWindowOpenHandler((details) => {
+    shell.openExternal(details.url); // Open URL in user's browser.
+    return { action: "deny" }; // Prevent the app from opening the URL.
+  });
 })();
 
 app.on('window-all-closed', () => {
   app.quit();
 });
 
-ipcMain.on('message', async (event) => {
+ipcMain.on('getBuildNumber', async (event) => {
   const core = new ov.Core();
+  const device = 'CPU';
+  const v = core.getVersions(device);
 
-  const v = core.getVersions('CPU');
-
-  event.reply('message', v);
+  event.reply('setBuildNumber', v[device].buildNumber);
 });

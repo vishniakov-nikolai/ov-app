@@ -22,15 +22,7 @@ html, body {
   flex-wrap: nowrap;
 }
 
-p a {
-  margin: 0 0.5em;
-}
-
-h1 {
-  text-align: center;
-}
-
-button, a.button {
+.btn, a.btn {
   font-size: 14px;
   font-family: IntelOneText, "Segoe UI", Helvetica, sans-serif;
   background-color: #0054AE;
@@ -42,6 +34,24 @@ button, a.button {
   text-align: center;
   text-decoration: none;
 }
+
+.mono {
+  font-family: IntelOneMono, 'Courier New', Courier, monospace;
+}
+
+/*
+html, body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  background-color: #e0dfe5;
+}
+
+p a {
+  margin: 0 0.5em;
+}
+
+
 
 button:hover {
   background-color: #00377C;
@@ -59,11 +69,11 @@ button:hover {
 .placeholder img {
   width: 100%;
   padding-bottom: 10px;
-}
+} */
 
-.select {
+/* .select {
   border: 1px solid black;
   padding: 8px;
   background-color: white;
   margin-bottom: 50px;
-}
+} */
