@@ -1,5 +1,11 @@
 import path from 'path';
-import { app, ipcMain, shell } from 'electron';
+import {
+  app,
+  HandlerDetails,
+  ipcMain,
+  shell,
+  WindowOpenHandlerResponse,
+} from 'electron';
 import serve from 'electron-serve';
 import { createWindow } from './helpers';
 import { addon as ov } from 'openvino-node';
@@ -24,12 +30,18 @@ ipcMain.on('ov.getVersions', async (event) => {
   event.reply('setOvInfo', v);
 });
 
+ipcMain.on('app.openSample', async (event, sample) => {
+  await createSampleWindow();
+});
+
+let mainWindow;
+
 main();
 
 async function main() {
   await app.whenReady();
 
-  const mainWindow = createWindow('main', {
+  mainWindow = createWindow('main', {
     width: 650,
     height: 600,
     webPreferences: {
@@ -37,15 +49,39 @@ async function main() {
     },
     titleBarOverlay: true,
     autoHideMenuBar: true,
+    maximizable: false,
   });
 
   await loadWindowURL(mainWindow, 'home');
 
-  mainWindow.webContents.setWindowOpenHandler((details) => {
-    shell.openExternal(details.url); // Open URL in user's browser.
+  mainWindow.webContents.setWindowOpenHandler(openLinkInBrowserHandler);
+}
 
-    return { action: 'deny' }; // Prevent the app from opening the URL.
+async function createSampleWindow() {
+  mainWindow.hide();
+
+  const sampleWindow = createWindow('sampleWindow', {
+    width: 850,
+    height: 600,
+    modal: true,
+    parent: mainWindow,
+    webPreferences: {
+      preload: path.join(__dirname, 'preload.js'),
+    },
+    titleBarOverlay: true,
+    autoHideMenuBar: true,
   });
+
+  await loadWindowURL(sampleWindow, 'semantic-segmentation');
+
+  sampleWindow.webContents.setWindowOpenHandler(openLinkInBrowserHandler);
+
+  // FIXME: Doesn't call for some reason
+  sampleWindow.once('ready-to-show', () => {
+    sampleWindow.show();
+  });
+
+  sampleWindow.on('close', () => { mainWindow.show(); });
 }
 
 async function loadWindowURL(
@@ -58,4 +94,10 @@ async function loadWindowURL(
 
   await window.loadURL(`http://localhost:${port}/${path}`);
   // mainWindow.webContents.openDevTools();
+}
+
+function openLinkInBrowserHandler(details: HandlerDetails) {
+  shell.openExternal(details.url); // Open URL in user's browser.
+
+  return { action: 'deny' } as WindowOpenHandlerResponse; // Prevent the app from opening the URL.
 }

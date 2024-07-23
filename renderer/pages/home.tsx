@@ -10,18 +10,24 @@ import {
   SelectValue,
 } from '../components/ui/select';
 import Footer from '../components/footer';
+import { useAppContext } from '../providers/app-context';
+import { Button } from '../components/ui/button';
 
 export default function HomePage() {
+  const { sample, defaultSample, setSample } = useAppContext();
+
   return (
     <React.Fragment>
       <Head>
         <title>OpenVINO App | Home</title>
       </Head>
-
       <div className="content">
         <h1 className="text-3xl font-bold">🍷 OpenVINO JS + Electron Demo</h1>
         <p>Select Task</p>
-        <Select>
+        <Select
+          defaultValue={defaultSample}
+          onValueChange={setSample}
+        >
           <SelectTrigger className="w-100">
             <SelectValue placeholder="Select Task" />
           </SelectTrigger>
@@ -32,7 +38,13 @@ export default function HomePage() {
           </SelectContent>
         </Select>
 
-        <Link className="btn" href="/semantic-segmentation">Run Sample</Link>
+        <Button
+          onClick={() => {
+            window.ipc.send('app.openSample', sample);
+          }}
+        >
+          Run Sample
+        </Button>
       </div>
       <Footer />
     </React.Fragment>

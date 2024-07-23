@@ -16,9 +16,12 @@ interface IAppContext {
     chrome: string | null,
     electron: string | null,
   },
-  theme?: string,
-  setTheme?: (string) => null,
+  sample?: string,
+  defaultSample?: string,
+  setSample?: (string) => null,
 };
+
+const DEFAULT_SAMPLE = 'ssd';
 
 const defaultContext: IAppContext = {
   ovInfo: {
@@ -29,17 +32,18 @@ const defaultContext: IAppContext = {
     chrome: null,
     electron: null,
   },
+  defaultSample: DEFAULT_SAMPLE,
 };
 
 const Context = createContext(defaultContext);
 
 export function AppContextProvider({ children }) {
-  const [theme, setTheme] = useState('light');
+  const [sample, setSample] = useState(DEFAULT_SAMPLE);
   const [ovInfo, setOvInfo] = useState(defaultContext.ovInfo);
 
   const ctx = Object.assign({}, defaultContext, {
-    theme,
-    setTheme,
+    sample,
+    setSample,
     ovInfo,
   });
 
@@ -48,8 +52,8 @@ export function AppContextProvider({ children }) {
 
     window.ipc.on('setOvInfo', (versions) => {
       setOvInfo(versions);
-    })
-  }, [])
+    });
+  }, []);
 
   return (
     <Context.Provider
