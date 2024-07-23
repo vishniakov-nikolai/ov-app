@@ -6,6 +6,7 @@
 @tailwind components;
 @tailwind utilities;
 
+@import "./public/fonts/fonts.css";
 
 @layer base {
   :root {
@@ -71,4 +72,43 @@
   body {
     @apply bg-background text-foreground;
   }
+}
+
+:root {
+  font-family: IntelOneText, "Segoe UI", Helvetica, sans-serif;
+}
+
+html, body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  background-color: #e0dfe5;
+}
+
+.content {
+  width: 600px;
+  height: 100%;
+  margin: 0 auto;
+  box-sizing: border-box;
+  padding: 50px 0 30px;
+  display: flex;
+  flex-direction: column;
+  flex-wrap: nowrap;
+}
+
+.btn, a.btn {
+  font-size: 14px;
+  font-family: IntelOneText, "Segoe UI", Helvetica, sans-serif;
+  background-color: #0054AE;
+  color: #fff;
+  padding: 12px 20px;
+  border: none;
+  font-weight: 500;
+  cursor: pointer;
+  text-align: center;
+  text-decoration: none;
+}
+
+.mono {
+  font-family: IntelOneMono, 'Courier New', Courier, monospace;
 }

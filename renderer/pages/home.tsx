@@ -9,27 +9,15 @@ import {
   SelectTrigger,
   SelectValue,
 } from '../components/ui/select';
-
-// function Select() {
-//   return <div className="select">Semantic Segmentation</div>
-// }
+import Footer from '../components/footer';
 
 export default function HomePage() {
-  const [message, setMessage] = React.useState('No message found');
-  const codeSample = `// Add openvino-node package
-const { ov: addon } = require('openvino-node');`;
-
-  React.useEffect(() => {
-    window.ipc.on('message', (message: string) => {
-      setMessage(message)
-    })
-  }, [])
-
   return (
     <React.Fragment>
       <Head>
-        <title>OpenVINO JS + Electron Demo</title>
+        <title>OpenVINO App | Home</title>
       </Head>
+
       <div className="content">
         <h1 className="text-3xl font-bold">🍷 OpenVINO JS + Electron Demo</h1>
         <p>Select Task</p>
@@ -45,9 +33,8 @@ const { ov: addon } = require('openvino-node');`;
         </Select>
 
         <Link className="btn" href="/semantic-segmentation">Run Sample</Link>
-        <br />
-        <div id="placeholder" className="placeholder"></div>
       </div>
+      <Footer />
     </React.Fragment>
   )
 }

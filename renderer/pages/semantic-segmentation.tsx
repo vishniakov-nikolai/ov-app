@@ -1,20 +1,13 @@
-import React from 'react'
-import Head from 'next/head'
-import Link from 'next/link'
-import Image from 'next/image'
+import React from 'react';
+import Head from 'next/head';
+import Link from 'next/link';
 import Editor from '@monaco-editor/react';
 
+import Footer from '../components/footer';
+
 export default function HomePage() {
-  const [message, setMessage] = React.useState('No message found');
   const codeSample = `// Add openvino-node package
 const { ov: addon } = require('openvino-node');`;
-
-  React.useEffect(() => {
-    window.ipc.on('setBuildNumber', (buildNumber) => {
-      setMessage(`Uses OpenVINO v${buildNumber}`)
-    })
-  }, [])
-
   return (
     <React.Fragment>
       <Head>
@@ -27,22 +20,17 @@ const { ov: addon } = require('openvino-node');`;
           In this demo, a pre-trained
           <a target="_blank" href="https://docs.openvino.ai/2023.0/omz_models_model_road_segmentation_adas_0001.html">road-segmentation-adas-0001</a>
           model uses</p>
-        <button
-          id="uploadButton"
-          onClick={() => {
-            window.ipc.send('getBuildNumber')
-          }}
-          className="btn"
-        >
+        <button className="btn">
           Select Image
         </button>
         <br />
         <div id="placeholder" className="placeholder"></div>
-        <p id="info" className="mono">{message}</p>
+
       </div>
       <div className="border border-black">
-        <Editor height="90vh" defaultLanguage="javascript" defaultValue={codeSample} />;
+        <Editor height="90vh" defaultLanguage="javascript" defaultValue={codeSample} />
       </div>
+      <Footer />
     </React.Fragment>
   )
 }
