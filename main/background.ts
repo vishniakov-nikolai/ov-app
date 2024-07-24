@@ -1,16 +1,18 @@
 import path from 'path';
 import {
   app,
+  dialog,
   HandlerDetails,
   ipcMain,
   shell,
   WindowOpenHandlerResponse,
 } from 'electron';
 import serve from 'electron-serve';
-import { createWindow } from './helpers';
+import { createWindow, downloadFile } from './helpers';
 import { addon as ov } from 'openvino-node';
 
 const isProd = process.env.NODE_ENV === 'production';
+const userDataPath = app.getPath('userData');
 
 if (isProd) {
   serve({ directory: 'app' });
@@ -32,6 +34,29 @@ ipcMain.on('ov.getVersions', async (event) => {
 
 ipcMain.on('app.openSample', async (event, sample) => {
   await createSampleWindow();
+});
+
+ipcMain.on('app.selectImage', async (event) => {
+  const result = await dialog.showOpenDialog({
+    properties: ['openFile'],
+    filters: [{ name: 'Images', extensions: ['jpg', 'png', 'jpeg'] }],
+  });
+
+  event.reply('app.imageSelected', result.canceled ? null : result.filePaths[0]);
+});
+
+ipcMain.on('app.downloadSegmentationModel', async (event) => {
+  console.log('== app.downloadSegmentationModel')
+
+  const modelName = 'road-segmentation-adas-0001';
+  const modelXMLName = `${modelName}.xml`;
+  const modelBINName = `${modelName}.bin`;
+  const baseURL = 'https://storage.openvinotoolkit.org/repositories/open_model_zoo/2022.3/models_bin/1/road-segmentation-adas-0001/FP32/';
+
+  const xmlPath = await downloadFile(baseURL + modelXMLName, modelXMLName, userDataPath);
+  const binPath = await downloadFile(baseURL + modelBINName, modelBINName, userDataPath);
+
+  event.reply('app.segmentationModelDownloaded', { xmlPath, binPath });
 });
 
 let mainWindow;
@@ -77,9 +102,9 @@ async function createSampleWindow() {
   sampleWindow.webContents.setWindowOpenHandler(openLinkInBrowserHandler);
 
   // FIXME: Doesn't call for some reason
-  sampleWindow.once('ready-to-show', () => {
-    sampleWindow.show();
-  });
+  // sampleWindow.once('ready-to-show', () => {
+  //   sampleWindow.show();
+  // });
 
   sampleWindow.on('close', () => { mainWindow.show(); });
 }
