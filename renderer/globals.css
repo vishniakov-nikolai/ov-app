@@ -112,3 +112,11 @@ html, body {
   background-color: rgba(22, 22, 22, 0.8); /* Slightly white transparent background */
   z-index: 1000; /* Ensures it is on top of other content */
 }
+
+@layer base {
+  a {
+    @apply text-primary;
+    padding: 0 .4em;
+    font-weight: 500;
+  }
+}

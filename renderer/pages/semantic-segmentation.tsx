@@ -12,6 +12,7 @@ export default function SemanticSegmentationSamplePage() {
   const [userImg, setUserImg] = useState(null);
   const [resultImg, setResultImg] = useState(null);
   const [isInferenceRunning, setIsInferenceRunning] = useState(false);
+  const [inferenceTime, setInferenceTime] = useState(null);
   const codeSample = `// Add openvino-node package
 const { ov: addon } = require('openvino-node');`;
 
@@ -26,6 +27,7 @@ const { ov: addon } = require('openvino-node');`;
 
       setUserImg(imgPath);
       setResultImg(null);
+      setInferenceTime(null);
       console.log({ imgPath });
       window.ipc.send('ov.start.ssd.runInference', imgPath);
     });
@@ -37,9 +39,14 @@ const { ov: addon } = require('openvino-node');`;
       console.log('=== Inference running...');
       setIsInferenceRunning(true);
     });
-    window.ipc.on('ov.end.ssd.runInference', (resultImgPath) => {
+    window.ipc.on('ov.end.ssd.runInference', (inferenceResult:
+      {
+        outputPath: string,
+        elapsedTime: BigInt,
+      }) => {
       setIsInferenceRunning(false);
-      setResultImg(resultImgPath);
+      setResultImg(inferenceResult.outputPath);
+      setInferenceTime(inferenceResult.elapsedTime);
     });
   }, []);
 
@@ -88,6 +95,13 @@ const { ov: addon } = require('openvino-node');`;
             </span>
           </div>
         </div>
+        {
+          inferenceTime &&
+          <div className="center">
+            Inference time:&nbsp;
+            { formatNanoseconds(inferenceTime) }ms
+          </div>
+        }
       </div>
       {
         showSourceCode &&
@@ -98,4 +112,8 @@ const { ov: addon } = require('openvino-node');`;
       <Footer />
     </React.Fragment>
   )
+}
+
+function formatNanoseconds(bigNumber) {
+  return Math.floor(Number(bigNumber) / 1000000);
 }

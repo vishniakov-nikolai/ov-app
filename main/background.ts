@@ -67,11 +67,11 @@ ipcMain.on('ov.start.ssd.runInference', async (event, imgPath: string) => {
   event.reply('ov.start.ssd.runInference');
   console.log('== ov.start.ssd.runInference', imgPath);
 
-  const resultPath = await runInference(imgPath, userDataPath);
+  const inferenceResult = await runInference(imgPath, userDataPath);
 
-  console.log(resultPath);
+  console.log(inferenceResult);
 
-  event.reply('ov.end.ssd.runInference', resultPath);
+  event.reply('ov.end.ssd.runInference', inferenceResult);
 });
 
 let mainWindow;

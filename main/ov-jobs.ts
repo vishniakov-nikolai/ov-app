@@ -12,6 +12,7 @@ import {
   transform,
   getImageBuffer,
 }  from './helpers/ov-helpers';
+import { hrtime } from 'process';
 
 const userDataPath = app.getPath('userData');
 const MODEL_DIR = userDataPath;
@@ -32,7 +33,9 @@ export async function runInference(imgPath, destPath) {
 
   const inferRequest = compiledModel.createInferRequest();
   console.time('Inference time');
+  const startTime = process.hrtime.bigint();
   const inferenceResult = await inferRequest.inferAsync({ [inputLayer.anyName]: inputTensor });
+  const endTime = process.hrtime.bigint();
   console.timeEnd('Inference time');
 
   const outputTensor = Object.values(inferenceResult)[0];
@@ -44,7 +47,7 @@ export async function runInference(imgPath, destPath) {
   await saveArrayDataAsFile(fullPath, imgDataWithOutput);
   console.log(`Output image saved as: ${fullPath}`);
 
-  return fullPath;
+  return { outputPath: fullPath, elapsedTime: endTime - startTime };
 }
 
 async function saveArrayDataAsFile(path, arrayData) {
