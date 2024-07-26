@@ -18,24 +18,41 @@ const userDataPath = app.getPath('userData');
 const MODEL_DIR = userDataPath;
 const MODEL_NAME = 'road-segmentation-adas-0001.xml';
 
-export async function runInference(imgPath, destPath) {
-  console.log(`Start inference of image: ${imgPath}`);
+let globalInferRequest = null;
+let globalInputLayer = null;
+let previousDevice = null;
+
+async function prepareInferRequest(device = 'AUTO') {
+  previousDevice = device;
 
   const modelXMLPath = path.join(MODEL_DIR, MODEL_NAME);
-
   const core = new ov.Core();
+
   const model = await core.readModel(modelXMLPath);
-  const compiledModel = await core.compileModel(model, 'AUTO');
+  const compiledModel = await core.compileModel(model, device);
   const inputLayer = compiledModel.input(0);
-
-  const imgDataArray = await getArrayWithImgData(imgPath, inputLayer.shape);
-  const inputTensor = new ov.Tensor('f32', inputLayer.shape, imgDataArray);
-
   const inferRequest = compiledModel.createInferRequest();
+
+  return { inputLayer, inferRequest };
+}
+
+export async function runInference(imgPath, device, destPath) {
+  console.log(`Start inference of image: ${imgPath}`);
+
+  if (!globalInferRequest || !globalInputLayer || previousDevice !== device) {
+    const result = await prepareInferRequest(device);
+
+    globalInferRequest = result.inferRequest;
+    globalInputLayer = result.inputLayer;
+  }
+
+  const imgDataArray = await getArrayWithImgData(imgPath, globalInputLayer.shape);
+  const inputTensor = new ov.Tensor('f32', globalInputLayer.shape, imgDataArray);
+
   console.time('Inference time');
-  const startTime = process.hrtime.bigint();
-  const inferenceResult = await inferRequest.inferAsync({ [inputLayer.anyName]: inputTensor });
-  const endTime = process.hrtime.bigint();
+  const startTime = hrtime.bigint();
+  const inferenceResult = await globalInferRequest.inferAsync({ [globalInputLayer.anyName]: inputTensor });
+  const endTime = hrtime.bigint();
   console.timeEnd('Inference time');
 
   const outputTensor = Object.values(inferenceResult)[0];

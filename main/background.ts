@@ -11,7 +11,7 @@ import {
 } from 'electron';
 import serve from 'electron-serve';
 import url from 'node:url';
-import { createWindow, downloadFile } from './helpers';
+import { createWindow, downloadFile, isFileExists } from './helpers';
 import { addon as ov } from 'openvino-node';
 import { runInference } from './ov-jobs';
 
@@ -36,6 +36,13 @@ ipcMain.on('ov.getVersions', async (event) => {
   event.reply('setOvInfo', v);
 });
 
+ipcMain.on('ov.getAvailableDevices', async (event) => {
+  const core = new ov.Core();
+  const devices = core.getAvailableDevices();
+
+  event.reply('setAvailableDevices', devices);
+});
+
 ipcMain.on('app.openSample', async (event, sample) => {
   await createSampleWindow();
 });
@@ -57,19 +64,25 @@ ipcMain.on('app.start.downloadSegmentationModel', async (event) => {
   const modelBINName = `${modelName}.bin`;
   const baseURL = 'https://storage.openvinotoolkit.org/repositories/open_model_zoo/2022.3/models_bin/1/road-segmentation-adas-0001/FP32/';
 
-  const xmlPath = await downloadFile(baseURL + modelXMLName, modelXMLName, userDataPath);
-  const binPath = await downloadFile(baseURL + modelBINName, modelBINName, userDataPath);
+  let xmlPath = path.join(userDataPath, modelXMLName);
+  if (!isFileExists(xmlPath))
+    xmlPath = await downloadFile(baseURL + modelXMLName, modelXMLName, userDataPath);
+
+  let binPath = path.join(userDataPath, modelBINName);
+  if (!isFileExists(binPath))
+    binPath = await downloadFile(baseURL + modelBINName, modelBINName, userDataPath);
 
   event.reply('app.end.downloadSegmentationModel', { xmlPath, binPath });
 });
 
-ipcMain.on('ov.start.ssd.runInference', async (event, imgPath: string) => {
+ipcMain.on('ov.start.ssd.runInference', async (event, {
+  imgPath,
+  device,
+}) => {
   event.reply('ov.start.ssd.runInference');
   console.log('== ov.start.ssd.runInference', imgPath);
 
-  const inferenceResult = await runInference(imgPath, userDataPath);
-
-  console.log(inferenceResult);
+  const inferenceResult = await runInference(imgPath, device, userDataPath);
 
   event.reply('ov.end.ssd.runInference', inferenceResult);
 });

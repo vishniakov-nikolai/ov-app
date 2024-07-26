@@ -2,12 +2,12 @@ import path from 'node:path';
 import http from 'node:http';
 import https from 'node:https';
 import { createWriteStream } from 'node:fs';
-import { mkdir, stat } from 'node:fs/promises';
+import { mkdir, stat, access, constants } from 'node:fs/promises';
 import { HttpsProxyAgent } from 'https-proxy-agent';
 
 export * from './create-window';
 
-export async function downloadFile(url, filename, destination) {
+export async function downloadFile(url, filename, destination): Promise<string | null> {
   console.log({ url, filename, destination });
 
   const { env } = process;
@@ -71,5 +71,14 @@ async function applyFolderPath(dirPath) {
     if (err.code !== 'ENOENT') throw err;
 
     await mkdir(dirPath, { recursive: true });
+  }
+}
+
+export async function isFileExists(path) {
+  try {
+    await access(path, constants.R_OK);
+    return true;
+  } catch {
+    return false;
   }
 }

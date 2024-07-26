@@ -5,6 +5,9 @@ import { UpdateIcon } from '@radix-ui/react-icons';
 
 import Footer from '../components/footer';
 import { Button } from '../components/ui/button';
+import DeviceSelector from '../components/device-selector';
+
+const DEFAULT_DEVICE = 'AUTO';
 
 export default function SemanticSegmentationSamplePage() {
   const [showSourceCode, setShowSourceCode] = useState(false);
@@ -13,6 +16,7 @@ export default function SemanticSegmentationSamplePage() {
   const [resultImg, setResultImg] = useState(null);
   const [isInferenceRunning, setIsInferenceRunning] = useState(false);
   const [inferenceTime, setInferenceTime] = useState(null);
+  const [selectedDevice, setSelectedDevice] = useState(DEFAULT_DEVICE);
   const codeSample = `// Add openvino-node package
 const { ov: addon } = require('openvino-node');`;
 
@@ -21,15 +25,13 @@ const { ov: addon } = require('openvino-node');`;
     window.ipc.send('app.start.downloadSegmentationModel');
 
     window.ipc.on('app.end.selectImage', (imgPath) => {
-      console.log({ imgPath });
-
       if (!imgPath) return;
 
       setUserImg(imgPath);
       setResultImg(null);
       setInferenceTime(null);
       console.log({ imgPath });
-      window.ipc.send('ov.start.ssd.runInference', imgPath);
+      window.ipc.send('ov.start.ssd.runInference', { imgPath, device: selectedDevice });
     });
     window.ipc.on('app.end.downloadSegmentationModel', (paths) => {
       console.log(paths);
@@ -64,10 +66,16 @@ const { ov: addon } = require('openvino-node');`;
       }
       <div className="p-10">
         <h1>Semantic Segmentation Demo</h1>
-        <p>
-          In this demo, a pre-trained
-          <a target="_blank" href="https://docs.openvino.ai/2023.0/omz_models_model_road_segmentation_adas_0001.html">road-segmentation-adas-0001</a>
-          model uses</p>
+        <ul>
+          <li>
+            Model:
+            <a target="_blank" href="https://docs.openvino.ai/2023.0/omz_models_model_road_segmentation_adas_0001.html">road-segmentation-adas-0001</a>
+          </li>
+        </ul>
+        <p>Device:</p>
+        <DeviceSelector
+          setSelectedDevice={setSelectedDevice}
+        />
         <Button
           onClick={() => window.ipc.send('app.start.selectImage')}
           disabled={isInferenceRunning}

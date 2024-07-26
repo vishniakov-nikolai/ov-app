@@ -19,6 +19,7 @@ interface IAppContext {
   sample?: string,
   defaultSample?: string,
   setSample?: (string) => null,
+  availableDevices: string[],
 };
 
 const DEFAULT_SAMPLE = 'ssd';
@@ -33,6 +34,7 @@ const defaultContext: IAppContext = {
     electron: null,
   },
   defaultSample: DEFAULT_SAMPLE,
+  availableDevices: [],
 };
 
 const Context = createContext(defaultContext);
@@ -40,18 +42,24 @@ const Context = createContext(defaultContext);
 export function AppContextProvider({ children }) {
   const [sample, setSample] = useState(DEFAULT_SAMPLE);
   const [ovInfo, setOvInfo] = useState(defaultContext.ovInfo);
+  const [availableDevices, setAvailableDevices] = useState(['AUTO']);
 
   const ctx = Object.assign({}, defaultContext, {
     sample,
     setSample,
     ovInfo,
+    availableDevices,
   });
 
   useEffect(() => {
     window.ipc.send('ov.getVersions');
-
     window.ipc.on('setOvInfo', (versions) => {
       setOvInfo(versions);
+    });
+
+    window.ipc.send('ov.getAvailableDevices');
+    window.ipc.on('setAvailableDevices', (devices: string[]) => {
+      setAvailableDevices(devices);
     });
   }, []);
 
