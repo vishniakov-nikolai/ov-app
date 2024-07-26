@@ -20,14 +20,19 @@ export default function HomePage() {
       <Head>
         <title>OpenVINO App | Home</title>
       </Head>
-      <div className="content">
-        <h1 className="text-3xl font-bold">🍷 OpenVINO JS + Electron Demo</h1>
+      <div className="content w-[580px]">
+        <div className="flex justify-center mt-20 mb-12">
+          <img
+            className="w-[360px]"
+            src="/svg/ov-logo.svg" alt="OpenVINO logo" />
+          <p className="text-6xl ml-3">App</p>
+        </div>
         <p>Select Task</p>
         <Select
           defaultValue={defaultSample}
           onValueChange={setSample}
         >
-          <SelectTrigger className="w-100">
+          <SelectTrigger className="w-100 mb-12">
             <SelectValue placeholder="Select Task" />
           </SelectTrigger>
           <SelectContent>
@@ -44,8 +49,8 @@ export default function HomePage() {
         >
           Run Sample
         </Button>
+        <Footer className="mt-auto" />
       </div>
-      <Footer />
     </React.Fragment>
   )
 }

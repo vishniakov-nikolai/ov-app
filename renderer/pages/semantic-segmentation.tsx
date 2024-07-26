@@ -64,60 +64,69 @@ const { ov: addon } = require('openvino-node');`;
           Model Downloading...
         </div>
       }
-      <div className="p-10">
-        <h1>Semantic Segmentation Demo</h1>
-        <ul>
-          <li>
-            Model:
-            <a target="_blank" href="https://docs.openvino.ai/2023.0/omz_models_model_road_segmentation_adas_0001.html">road-segmentation-adas-0001</a>
-          </li>
-        </ul>
-        <p>Device:</p>
-        <DeviceSelector
-          setSelectedDevice={setSelectedDevice}
-        />
-        <Button
-          onClick={() => window.ipc.send('app.start.selectImage')}
-          disabled={isInferenceRunning}
-        >Select Image</Button>
-        <Button variant="secondary" onClick={() => setShowSourceCode(!showSourceCode)}>
-          { showSourceCode ? 'Hide' : 'Show' } Source Code
-        </Button>
-        <div className="border border-gray flex min-h-80">
-          <div className="w-1/2 flex items-center justify-center relative p-4">
-            { userImg &&
-              <img src={userImg} alt="User img" className="absolute inset-0 w-full h-full object-contain p-2" />
-            }
-            <span className="text-center text-xl">User Image</span>
+      <div className="content w-auto">
+        <div className="p-5">
+          <h1 className="text-4xl mb-8">Semantic Segmentation Demo</h1>
+          <ul className="leading-10 mb-3">
+            <li>
+              <span className="mr-2">Model:</span>
+              <a target="_blank" href="https://docs.openvino.ai/2023.0/omz_models_model_road_segmentation_adas_0001.html">road-segmentation-adas-0001</a>
+            </li>
+            <li className="flex">
+              <span className="mr-2">Device:</span>
+              <DeviceSelector
+                setSelectedDevice={setSelectedDevice}
+              />
+            </li>
+          </ul>
+
+          <div className="mb-5">
+            <Button
+              onClick={() => window.ipc.send('app.start.selectImage')}
+              disabled={isInferenceRunning}
+              className="mr-2"
+            >Select Image</Button>
+            <Button variant="secondary" onClick={() => setShowSourceCode(!showSourceCode)}>
+              { showSourceCode ? 'Hide' : 'Show' } Source Code
+            </Button>
           </div>
-          <div className="w-1/2 flex items-center justify-center relative p-4">
-            { resultImg &&
-              <img src={resultImg} alt="Result img" className="absolute inset-0 w-full h-full object-contain p-2" />
-            }
-            <span className="text-center text-xl">
-              {
-                isInferenceRunning
-                  ? <UpdateIcon className="mr-2 h-4 w-4 animate-spin" />
-                  : 'Result Image'
+          <div className="border border-gray flex min-h-80">
+            <div className="w-1/2 flex items-center justify-center relative p-4">
+              { userImg &&
+                <img src={userImg} alt="User img" className="absolute inset-0 w-full h-full object-contain p-2" />
               }
-            </span>
+              <span className="text-center text-xl">User Image</span>
+            </div>
+            <div className="w-1/2 flex items-center justify-center relative p-4">
+              { resultImg &&
+                <img src={resultImg} alt="Result img" className="absolute inset-0 w-full h-full object-contain p-2" />
+              }
+              <span className="text-center text-xl">
+                {
+                  isInferenceRunning
+                    ? <UpdateIcon className="mr-2 h-4 w-4 animate-spin" />
+                    : 'Result Image'
+                }
+              </span>
+            </div>
           </div>
+          {
+            inferenceTime &&
+            <div className="center">
+              Inference time:&nbsp;
+              { formatNanoseconds(inferenceTime) }ms
+            </div>
+          }
         </div>
         {
-          inferenceTime &&
-          <div className="center">
-            Inference time:&nbsp;
-            { formatNanoseconds(inferenceTime) }ms
+          showSourceCode &&
+          <div className="border border-black">
+            <Editor height="90vh" defaultLanguage="javascript" defaultValue={codeSample} />
           </div>
         }
+        <Footer className="mt-auto" />
       </div>
-      {
-        showSourceCode &&
-        <div className="border border-black">
-          <Editor height="90vh" defaultLanguage="javascript" defaultValue={codeSample} />
-        </div>
-      }
-      <Footer />
+
     </React.Fragment>
   )
 }

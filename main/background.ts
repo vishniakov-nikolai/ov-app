@@ -102,7 +102,7 @@ async function main() {
 
   mainWindow = createWindow('main', {
     width: 650,
-    height: 600,
+    height: 500,
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
     },
@@ -110,6 +110,7 @@ async function main() {
     autoHideMenuBar: true,
     maximizable: false,
   });
+  mainWindow.setResizable(false);
 
   await loadWindowURL(mainWindow, 'home');
 
@@ -120,8 +121,8 @@ async function createSampleWindow() {
   mainWindow.hide();
 
   const sampleWindow = createWindow('sampleWindow', {
-    width: 850,
-    height: 600,
+    width: 900,
+    height: 700,
     modal: true,
     parent: mainWindow,
     webPreferences: {
