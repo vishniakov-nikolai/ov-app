@@ -83,7 +83,6 @@ ipcMain.on('ov.start.ssd.runInference', async (event, {
   console.log('== ov.start.ssd.runInference', imgPath);
 
   const inferenceResult = await runInference(imgPath, device, userDataPath);
-
   event.reply('ov.end.ssd.runInference', inferenceResult);
 });
 
@@ -122,7 +121,7 @@ async function createSampleWindow() {
 
   const sampleWindow = createWindow('sampleWindow', {
     width: 900,
-    height: 700,
+    height: 750,
     modal: true,
     parent: mainWindow,
     webPreferences: {

@@ -55,7 +55,7 @@ export async function runInference(imgPath, device, destPath) {
   const endTime = hrtime.bigint();
   console.timeEnd('Inference time');
 
-  const outputTensor = Object.values(inferenceResult)[0];
+  const outputTensor = Object.values(inferenceResult)[0] as { data: Float32Array };
   const imgDataWithOutput = await placeTensorDataOnImg(imgPath, outputTensor);
 
   const filename = `out-${new Date().getTime()}.jpg`;
@@ -64,7 +64,10 @@ export async function runInference(imgPath, device, destPath) {
   await saveArrayDataAsFile(fullPath, imgDataWithOutput);
   console.log(`Output image saved as: ${fullPath}`);
 
-  return { outputPath: fullPath, elapsedTime: endTime - startTime };
+  return {
+    outputPath: fullPath,
+    elapsedTime: endTime - startTime,
+  };
 }
 
 async function saveArrayDataAsFile(path, arrayData) {

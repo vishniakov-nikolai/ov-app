@@ -1,24 +1,21 @@
 import React, { useEffect, useState } from 'react';
 import Head from 'next/head';
-import Editor from '@monaco-editor/react';
 import { UpdateIcon } from '@radix-ui/react-icons';
 
 import Footer from '../components/footer';
 import { Button } from '../components/ui/button';
 import DeviceSelector from '../components/device-selector';
+import InferenceTime from '../components/inference-time';
 
 const DEFAULT_DEVICE = 'AUTO';
 
 export default function SemanticSegmentationSamplePage() {
-  const [showSourceCode, setShowSourceCode] = useState(false);
   const [isModelDownloading, setIsModelDownloading] = useState(false);
   const [userImg, setUserImg] = useState(null);
   const [resultImg, setResultImg] = useState(null);
   const [isInferenceRunning, setIsInferenceRunning] = useState(false);
   const [inferenceTime, setInferenceTime] = useState(null);
   const [selectedDevice, setSelectedDevice] = useState(DEFAULT_DEVICE);
-  const codeSample = `// Add openvino-node package
-const { ov: addon } = require('openvino-node');`;
 
   useEffect(() => {
     setIsModelDownloading(true);
@@ -30,7 +27,6 @@ const { ov: addon } = require('openvino-node');`;
       setUserImg(imgPath);
       setResultImg(null);
       setInferenceTime(null);
-      console.log({ imgPath });
       window.ipc.send('ov.start.ssd.runInference', { imgPath, device: selectedDevice });
     });
     window.ipc.on('app.end.downloadSegmentationModel', (paths) => {
@@ -86,9 +82,6 @@ const { ov: addon } = require('openvino-node');`;
               disabled={isInferenceRunning}
               className="mr-2"
             >Select Image</Button>
-            <Button variant="secondary" onClick={() => setShowSourceCode(!showSourceCode)}>
-              { showSourceCode ? 'Hide' : 'Show' } Source Code
-            </Button>
           </div>
           <div className="border border-gray flex min-h-80">
             <div className="w-1/2 flex items-center justify-center relative p-4">
@@ -112,25 +105,12 @@ const { ov: addon } = require('openvino-node');`;
           </div>
           {
             inferenceTime &&
-            <div className="center">
-              Inference time:&nbsp;
-              { formatNanoseconds(inferenceTime) }ms
-            </div>
+            <InferenceTime value={inferenceTime} />
           }
         </div>
-        {
-          showSourceCode &&
-          <div className="border border-black">
-            <Editor height="90vh" defaultLanguage="javascript" defaultValue={codeSample} />
-          </div>
-        }
         <Footer className="mt-auto" />
       </div>
 
     </React.Fragment>
   )
-}
-
-function formatNanoseconds(bigNumber) {
-  return Math.floor(Number(bigNumber) / 1000000);
 }
