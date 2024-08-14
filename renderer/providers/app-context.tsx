@@ -1,4 +1,5 @@
 import { createContext, useContext, useState, useEffect } from 'react';
+import { BE, UI } from '../../constants';
 
 interface ovVersion {
   buildNumber: string,
@@ -52,13 +53,13 @@ export function AppContextProvider({ children }) {
   });
 
   useEffect(() => {
-    window.ipc.send('ov.getVersions');
-    window.ipc.on('setOvInfo', (versions) => {
+    window.ipc.send(BE.GET.OV.VERSION);
+    window.ipc.on(UI.SET.OV.VERSION, (versions) => {
       setOvInfo(versions);
     });
 
-    window.ipc.send('ov.getAvailableDevices');
-    window.ipc.on('setAvailableDevices', (devices: string[]) => {
+    window.ipc.send(BE.GET.OV.AVAILABLE_DEVICES);
+    window.ipc.on(UI.SET.OV.AVAILABLE_DEVICES, (devices: string[]) => {
       setAvailableDevices(devices);
     });
   }, []);

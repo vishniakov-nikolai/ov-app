@@ -6,6 +6,7 @@ import Footer from '../components/footer';
 import { Button } from '../components/ui/button';
 import DeviceSelector from '../components/device-selector';
 import InferenceTime from '../components/inference-time';
+import { BE, UI } from '../../constants';
 
 const DEFAULT_DEVICE = 'AUTO';
 
@@ -19,25 +20,25 @@ export default function SemanticSegmentationSamplePage() {
 
   useEffect(() => {
     setIsModelDownloading(true);
-    window.ipc.send('app.start.downloadSegmentationModel');
+    window.ipc.send(BE.START.DOWNLOAD_SEGMENTATION_MODEL);
 
-    window.ipc.on('app.end.selectImage', (imgPath) => {
+    window.ipc.on(UI.END.SELECT_IMG, (imgPath) => {
       if (!imgPath) return;
 
       setUserImg(imgPath);
       setResultImg(null);
       setInferenceTime(null);
-      window.ipc.send('ov.start.ssd.runInference', { imgPath, device: selectedDevice });
+      window.ipc.send(BE.START.OV.SSD_INFERENCE, { imgPath, device: selectedDevice });
     });
-    window.ipc.on('app.end.downloadSegmentationModel', (paths) => {
+    window.ipc.on(UI.END.DOWNLOAD_SEGMENTATION_MODEL, (paths) => {
       console.log(paths);
       setIsModelDownloading(false);
     });
-    window.ipc.on('ov.start.ssd.runInference', () => {
+    window.ipc.on(UI.START.SSD_INFERENCE, () => {
       console.log('=== Inference running...');
       setIsInferenceRunning(true);
     });
-    window.ipc.on('ov.end.ssd.runInference', (inferenceResult:
+    window.ipc.on(UI.END.SSD_INFERENCE, (inferenceResult:
       {
         outputPath: string,
         elapsedTime: BigInt,
@@ -78,7 +79,7 @@ export default function SemanticSegmentationSamplePage() {
 
           <div className="mb-5">
             <Button
-              onClick={() => window.ipc.send('app.start.selectImage')}
+              onClick={() => window.ipc.send(BE.START.OV.SELECT_IMG)}
               disabled={isInferenceRunning}
               className="mr-2"
             >Select Image</Button>

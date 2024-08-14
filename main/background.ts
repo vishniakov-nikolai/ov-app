@@ -14,6 +14,7 @@ import url from 'node:url';
 import { createWindow, downloadFile, isFileExists } from './helpers';
 import { addon as ov } from 'openvino-node';
 import { runInference } from './ov-jobs';
+import { BE, UI } from '../constants';
 
 const isProd = process.env.NODE_ENV === 'production';
 const userDataPath = app.getPath('userData');
@@ -28,36 +29,36 @@ app.on('window-all-closed', () => {
   app.quit();
 });
 
-ipcMain.on('ov.getVersions', async (event) => {
+ipcMain.on(BE.GET.OV.VERSION, async (event) => {
   const core = new ov.Core();
   const device = 'CPU';
   const v = core.getVersions(device);
 
-  event.reply('setOvInfo', v);
+  event.reply(UI.SET.OV.VERSION, v);
 });
 
-ipcMain.on('ov.getAvailableDevices', async (event) => {
+ipcMain.on(BE.GET.OV.AVAILABLE_DEVICES, async (event) => {
   const core = new ov.Core();
   const devices = core.getAvailableDevices();
 
-  event.reply('setAvailableDevices', devices);
+  event.reply(UI.SET.OV.AVAILABLE_DEVICES, devices);
 });
 
-ipcMain.on('app.openSample', async (event, sample) => {
+ipcMain.on(BE.OPEN_SAMPLE, async (event, sample) => {
   await createSampleWindow();
 });
 
-ipcMain.on('app.start.selectImage', async (event) => {
+ipcMain.on(BE.START.OV.SELECT_IMG, async (event) => {
   const result = await dialog.showOpenDialog({
     properties: ['openFile'],
     filters: [{ name: 'Images', extensions: ['jpg', 'png', 'jpeg'] }],
   });
 
-  event.reply('app.end.selectImage', result.canceled ? null : result.filePaths[0]);
+  event.reply(UI.END.SELECT_IMG, result.canceled ? null : result.filePaths[0]);
 });
 
-ipcMain.on('app.start.downloadSegmentationModel', async (event) => {
-  console.log('== app.start.downloadSegmentationModel');
+ipcMain.on(BE.START.DOWNLOAD_SEGMENTATION_MODEL, async (event) => {
+  console.log(`== ${BE.START.DOWNLOAD_SEGMENTATION_MODEL}`);
 
   const modelName = 'road-segmentation-adas-0001';
   const modelXMLName = `${modelName}.xml`;
@@ -72,18 +73,18 @@ ipcMain.on('app.start.downloadSegmentationModel', async (event) => {
   if (!isFileExists(binPath))
     binPath = await downloadFile(baseURL + modelBINName, modelBINName, userDataPath);
 
-  event.reply('app.end.downloadSegmentationModel', { xmlPath, binPath });
+  event.reply(UI.END.DOWNLOAD_SEGMENTATION_MODEL, { xmlPath, binPath });
 });
 
-ipcMain.on('ov.start.ssd.runInference', async (event, {
+ipcMain.on(BE.START.OV.SSD_INFERENCE, async (event, {
   imgPath,
   device,
 }) => {
-  event.reply('ov.start.ssd.runInference');
-  console.log('== ov.start.ssd.runInference', imgPath);
+  event.reply(UI.START.SSD_INFERENCE);
+  console.log(`== ${UI.START.SSD_INFERENCE}`, imgPath);
 
   const inferenceResult = await runInference(imgPath, device, userDataPath);
-  event.reply('ov.end.ssd.runInference', inferenceResult);
+  event.reply(UI.END.SSD_INFERENCE, inferenceResult);
 });
 
 let mainWindow;

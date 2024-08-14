@@ -11,6 +11,7 @@ import {
 import Footer from '../components/footer';
 import { useAppContext } from '../providers/app-context';
 import { Button } from '../components/ui/button';
+import { BE } from '../../constants';
 
 export default function HomePage() {
   const { sample, defaultSample, setSample } = useAppContext();
@@ -44,7 +45,7 @@ export default function HomePage() {
 
         <Button
           onClick={() => {
-            window.ipc.send('app.openSample', sample);
+            window.ipc.send(BE.OPEN_SAMPLE, sample);
           }}
         >
           Run Sample
