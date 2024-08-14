@@ -5,55 +5,34 @@ const { cv } = require('opencv-wasm');
 const { addon: ov } = require('openvino-node');
 
 import { app } from 'electron';
-
+import InferenceHandlerSingleton from './inference-handler';
 import {
   getImageData,
   arrayToImageData,
   transform,
   getImageBuffer,
 }  from './helpers/ov-helpers';
-import { hrtime } from 'process';
+
 
 const userDataPath = app.getPath('userData');
 const MODEL_DIR = userDataPath;
 const MODEL_NAME = 'road-segmentation-adas-0001.xml';
 
-let globalInferRequest = null;
-let globalInputLayer = null;
-let previousDevice = null;
-
-async function prepareInferRequest(device = 'AUTO') {
-  previousDevice = device;
+export async function runInference(imgPath, device, destPath) {
+  console.log(`Start inference of image: ${imgPath}, device ${device}`);
 
   const modelXMLPath = path.join(MODEL_DIR, MODEL_NAME);
-  const core = new ov.Core();
+  const ih = await InferenceHandlerSingleton.get(modelXMLPath);
+  const inputs = ih.inputs();
+  const inputLayer = inputs[0];
 
-  const model = await core.readModel(modelXMLPath);
-  const compiledModel = await core.compileModel(model, device);
-  const inputLayer = compiledModel.input(0);
-  const inferRequest = compiledModel.createInferRequest();
+  const imgDataArray = await getArrayWithImgData(imgPath, inputLayer.shape);
+  const inputTensor = new ov.Tensor('f32', inputLayer.shape, imgDataArray);
 
-  return { inputLayer, inferRequest };
-}
-
-export async function runInference(imgPath, device, destPath) {
-  console.log(`Start inference of image: ${imgPath}`);
-
-  if (!globalInferRequest || !globalInputLayer || previousDevice !== device) {
-    const result = await prepareInferRequest(device);
-
-    globalInferRequest = result.inferRequest;
-    globalInputLayer = result.inputLayer;
-  }
-
-  const imgDataArray = await getArrayWithImgData(imgPath, globalInputLayer.shape);
-  const inputTensor = new ov.Tensor('f32', globalInputLayer.shape, imgDataArray);
-
-  console.time('Inference time');
-  const startTime = hrtime.bigint();
-  const inferenceResult = await globalInferRequest.inferAsync({ [globalInputLayer.anyName]: inputTensor });
-  const endTime = hrtime.bigint();
-  console.timeEnd('Inference time');
+  const {
+    inferenceResult,
+    elapsedTime,
+  } = await ih.performInference({ [inputLayer.anyName]: inputTensor }, device);
 
   const outputTensor = Object.values(inferenceResult)[0] as { data: Float32Array };
   const imgDataWithOutput = await placeTensorDataOnImg(imgPath, outputTensor);
@@ -66,7 +45,7 @@ export async function runInference(imgPath, device, destPath) {
 
   return {
     outputPath: fullPath,
-    elapsedTime: endTime - startTime,
+    elapsedTime,
   };
 }
 

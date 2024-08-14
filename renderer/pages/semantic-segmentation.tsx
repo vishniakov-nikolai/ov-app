@@ -28,6 +28,9 @@ export default function SemanticSegmentationSamplePage() {
       setUserImg(imgPath);
       setResultImg(null);
       setInferenceTime(null);
+
+      console.log({ selectedDevice });
+
       window.ipc.send(BE.START.OV.SSD_INFERENCE, { imgPath, device: selectedDevice });
     });
     window.ipc.on(UI.END.DOWNLOAD_SEGMENTATION_MODEL, (paths) => {
@@ -71,6 +74,7 @@ export default function SemanticSegmentationSamplePage() {
             </li>
             <li className="flex">
               <span className="mr-2">Device:</span>
+              {selectedDevice}
               <DeviceSelector
                 setSelectedDevice={setSelectedDevice}
               />
