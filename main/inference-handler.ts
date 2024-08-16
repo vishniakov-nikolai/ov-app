@@ -41,9 +41,15 @@ class InferenceHandler {
 
   async performInference(inputData: { [key: string]: Tensor }, device?: string) {
     if (!this.compiledModel || this.selectedDevice !== device) {
+      if (!this.compiledModel) console.log('== Compiled model is absent');
+      if (this.selectedDevice !== device) console.log('== Device was changed');
+
       this.selectedDevice = device || this.selectedDevice;
+      console.log('== Use device ', this.selectedDevice);
       this.compiledModel = await this.core.compileModel(this.model, this.selectedDevice);
+      console.log('== Model compiled');
       this.ir = this.compiledModel.createInferRequest();
+      console.log('== Infer request created');
     }
 
     const inferenceTimeLabel = 'Inference time';
