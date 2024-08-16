@@ -1,119 +1,56 @@
-const fs = require('node:fs').promises;
-const path = require('node:path');
-
-const { cv } = require('opencv-wasm');
-const { addon: ov } = require('openvino-node');
-
+import path from 'node:path';
 import { app } from 'electron';
-import InferenceHandlerSingleton from './inference-handler';
-import {
-  getImageData,
-  arrayToImageData,
-  transform,
-  getImageBuffer,
-}  from './helpers/ov-helpers';
 
+import { preprocessSSDInput } from './preprocessors';
+import { postprocessSSDInput } from './postprocessors';
+import InferenceHandlerSingleton from './inference-handler';
 
 const userDataPath = app.getPath('userData');
 const MODEL_DIR = userDataPath;
-const MODEL_NAME = 'road-segmentation-adas-0001.xml';
 
-export async function runInference(imgPath, device, destPath) {
+const predefinedModelsMapping = {
+  'road-segmentation-adas-0001': {
+    preprocess: preprocessSSDInput,
+    postprocess: postprocessSSDInput,
+    files: [
+      'road-segmentation-adas-0001.xml',
+      'road-segmentation-adas-0001.bin'
+    ],
+  },
+};
+
+function getPredefinedModelConfig(label) {
+  const predefinedModelsPath = MODEL_DIR;
+  const modelConfig = predefinedModelsMapping[label];
+
+  if (!modelConfig)
+    throw new Error(`Predefined model with label '${label}' not found`);
+
+  return {
+    ...modelConfig,
+    files: modelConfig.files.map(filename => path.join(predefinedModelsPath, filename)),
+  }
+}
+
+export async function runSSDInference({
+  modelLabel,
+  imgPath,
+  device,
+  destPath,
+}) {
   console.log(`Start inference of image: ${imgPath}, device ${device}`);
 
-  const modelXMLPath = path.join(MODEL_DIR, MODEL_NAME);
-  const ih = await InferenceHandlerSingleton.get(modelXMLPath);
-  const inputs = ih.inputs();
-  const inputLayer = inputs[0];
-
-  const imgDataArray = await getArrayWithImgData(imgPath, inputLayer.shape);
-  const inputTensor = new ov.Tensor('f32', inputLayer.shape, imgDataArray);
-
+  const { files, preprocess, postprocess } = getPredefinedModelConfig(modelLabel);
+  const ih = await InferenceHandlerSingleton.get(...files);
+  const input = await preprocess(imgPath, ih);
   const {
     inferenceResult,
     elapsedTime,
-  } = await ih.performInference({ [inputLayer.anyName]: inputTensor }, device);
-
-  const outputTensor = Object.values(inferenceResult)[0] as { data: Float32Array };
-  const imgDataWithOutput = await placeTensorDataOnImg(imgPath, outputTensor);
-
-  const filename = `out-${new Date().getTime()}.jpg`;
-  const fullPath = `${destPath}/${filename}`;
-
-  await saveArrayDataAsFile(fullPath, imgDataWithOutput);
-  console.log(`Output image saved as: ${fullPath}`);
+  } = await ih.performInference(input, device);
+  const postprocessResult = await postprocess(inferenceResult, imgPath, destPath);
 
   return {
-    outputPath: fullPath,
+    ...postprocessResult,
     elapsedTime,
   };
-}
-
-async function saveArrayDataAsFile(path, arrayData) {
-  await fs.writeFile(path, getImageBuffer(arrayData));
-}
-
-async function getArrayWithImgData(imgPath, shape) {
-  const imgData = await getImageData(imgPath);
-
-  const originalImage = cv.matFromImageData(imgData);
-
-  const image = new cv.Mat();
-  cv.cvtColor(originalImage, image, cv.COLOR_RGBA2RGB);
-  cv.cvtColor(image, image, cv.COLOR_BGR2RGB);
-
-  const [B, C, H, W] = shape;
-
-  cv.resize(image, image, new cv.Size(W, H));
-
-  const inputImage = transform(image.data, { width: W, height: H }, [0, 1, 2]); // NHWC to NCHW
-
-  return new Float32Array(inputImage);
-}
-
-async function placeTensorDataOnImg(imgPath, tensor) {
-  const imgData = await getImageData(imgPath);
-
-  const originalImage = cv.matFromImageData(imgData);
-  const { cols: originalWidth, rows: originalHeight } = originalImage;
-
-  const { data: outputData } = tensor;
-  const inferenceResultLayer = [];
-  const colormap = [
-    [68, 1, 84, 255],
-    [48, 103, 141, 255],
-    [53, 183, 120, 255],
-    [199, 216, 52, 255],
-  ];
-
-  const size = outputData.length / 4;
-
-  for (let i = 0; i < size; i++) {
-    const valueAt = (i, number) => outputData[i + number * size];
-
-    const currentValues = {
-      bg: valueAt(i, 0),
-      c: valueAt(i, 1),
-      h: valueAt(i, 2),
-      w: valueAt(i, 3),
-    };
-    const values = Object.values(currentValues);
-    const maxIndex = values.indexOf(Math.max(...values));
-
-    inferenceResultLayer.push(maxIndex);
-  }
-
-  const pixels = [];
-  inferenceResultLayer.forEach(i => pixels.push(...colormap[i]));
-
-  const alpha = 0.4;
-
-  const [H, W] = tensor.getShape().slice(2);
-  const pixelsAsImageData = arrayToImageData(pixels, W, H);
-  const mask = cv.matFromImageData(pixelsAsImageData);
-
-  cv.resize(mask, mask, new cv.Size(originalWidth, originalHeight));
-  cv.addWeighted(mask, alpha, originalImage, 1 - alpha, 0, mask);
-
-  return arrayToImageData(mask.data, originalWidth, originalHeight);
 }

@@ -32,7 +32,6 @@ class InferenceHandler {
       this.model = await this.core.readModel(this.modelFiles[0], this.modelFiles[1]);
     else
       this.model = await this.core.readModel(this.modelFiles[0]);
-
   }
 
   inputs() {

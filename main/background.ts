@@ -13,7 +13,7 @@ import serve from 'electron-serve';
 import url from 'node:url';
 import { createWindow, downloadFile, isFileExists } from './helpers';
 import { addon as ov } from 'openvino-node';
-import { runInference } from './ov-jobs';
+import { runSSDInference } from './ov-jobs';
 import { BE, UI } from '../constants';
 
 const isProd = process.env.NODE_ENV === 'production';
@@ -77,13 +77,19 @@ ipcMain.on(BE.START.DOWNLOAD_SEGMENTATION_MODEL, async (event) => {
 });
 
 ipcMain.on(BE.START.OV.SSD_INFERENCE, async (event, {
+  modelLabel,
   imgPath,
   device,
 }) => {
   event.reply(UI.START.SSD_INFERENCE);
   console.log(`== ${UI.START.SSD_INFERENCE}`, imgPath);
 
-  const inferenceResult = await runInference(imgPath, device, userDataPath);
+  const inferenceResult = await runSSDInference({
+    modelLabel,
+    imgPath,
+    device,
+    destPath: userDataPath,
+  });
   event.reply(UI.END.SSD_INFERENCE, inferenceResult);
 });
 

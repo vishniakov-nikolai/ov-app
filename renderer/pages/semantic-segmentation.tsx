@@ -30,7 +30,11 @@ export default function SemanticSegmentationSamplePage() {
       setResultImg(null);
       setInferenceTime(null);
 
-      window.ipc.send(BE.START.OV.SSD_INFERENCE, { imgPath, device: selectedDevice });
+      window.ipc.send(BE.START.OV.SSD_INFERENCE, {
+        modelLabel: 'road-segmentation-adas-0001',
+        imgPath,
+        device: selectedDevice
+      });
     });
   }, [selectedDevice]);
   useEffect(() => {
