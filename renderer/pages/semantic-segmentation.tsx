@@ -21,27 +21,32 @@ export default function SemanticSegmentationSamplePage() {
   useEffect(() => {
     setIsModelDownloading(true);
     window.ipc.send(BE.START.DOWNLOAD_SEGMENTATION_MODEL);
-
-    window.ipc.on(UI.END.SELECT_IMG, (imgPath) => {
+  }, []);
+  useEffect(() => {
+    return window.ipc.on(UI.END.SELECT_IMG, (imgPath) => {
       if (!imgPath) return;
 
       setUserImg(imgPath);
       setResultImg(null);
       setInferenceTime(null);
 
-      console.log({ selectedDevice });
-
       window.ipc.send(BE.START.OV.SSD_INFERENCE, { imgPath, device: selectedDevice });
     });
-    window.ipc.on(UI.END.DOWNLOAD_SEGMENTATION_MODEL, (paths) => {
+  }, [selectedDevice]);
+  useEffect(() => {
+    return window.ipc.on(UI.END.DOWNLOAD_SEGMENTATION_MODEL, (paths) => {
       console.log(paths);
       setIsModelDownloading(false);
     });
-    window.ipc.on(UI.START.SSD_INFERENCE, () => {
+  }, []);
+  useEffect(() => {
+    return window.ipc.on(UI.START.SSD_INFERENCE, () => {
       console.log('=== Inference running...');
       setIsInferenceRunning(true);
     });
-    window.ipc.on(UI.END.SSD_INFERENCE, (inferenceResult:
+  }, []);
+  useEffect(() => {
+    return window.ipc.on(UI.END.SSD_INFERENCE, (inferenceResult:
       {
         outputPath: string,
         elapsedTime: BigInt,
@@ -49,6 +54,7 @@ export default function SemanticSegmentationSamplePage() {
       setIsInferenceRunning(false);
       setResultImg(inferenceResult.outputPath);
       setInferenceTime(inferenceResult.elapsedTime);
+      console.log('=== Inference done');
     });
   }, []);
 
