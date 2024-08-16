@@ -15,6 +15,7 @@ import { createWindow, downloadFile, isFileExists } from './helpers';
 import { addon as ov } from 'openvino-node';
 import { runSSDInference } from './ov-jobs';
 import { BE, UI } from '../constants';
+import getPredefinedModelConfig from './predefined-models';
 
 const isProd = process.env.NODE_ENV === 'production';
 const userDataPath = app.getPath('userData');
@@ -57,23 +58,22 @@ ipcMain.on(BE.START.OV.SELECT_IMG, async (event) => {
   event.reply(UI.END.SELECT_IMG, result.canceled ? null : result.filePaths[0]);
 });
 
-ipcMain.on(BE.START.DOWNLOAD_SEGMENTATION_MODEL, async (event) => {
-  console.log(`== ${BE.START.DOWNLOAD_SEGMENTATION_MODEL}`);
+ipcMain.on(BE.START.DOWNLOAD_SEGMENTATION_MODEL, async (event, modelLabel) => {
+  console.log(`== ${BE.START.DOWNLOAD_SEGMENTATION_MODEL}: ${modelLabel}`);
 
-  const modelName = 'road-segmentation-adas-0001';
-  const modelXMLName = `${modelName}.xml`;
-  const modelBINName = `${modelName}.bin`;
-  const baseURL = 'https://storage.openvinotoolkit.org/repositories/open_model_zoo/2022.3/models_bin/1/road-segmentation-adas-0001/FP32/';
+  const { url, files } = getPredefinedModelConfig(modelLabel);
+  const paths = [];
 
-  let xmlPath = path.join(userDataPath, modelXMLName);
-  if (!isFileExists(xmlPath))
-    xmlPath = await downloadFile(baseURL + modelXMLName, modelXMLName, userDataPath);
+  for (const filename of files) {
+    let filePath = path.join(userDataPath, filename);
 
-  let binPath = path.join(userDataPath, modelBINName);
-  if (!isFileExists(binPath))
-    binPath = await downloadFile(baseURL + modelBINName, modelBINName, userDataPath);
+    if (await isFileExists(filePath)) continue;
 
-  event.reply(UI.END.DOWNLOAD_SEGMENTATION_MODEL, { xmlPath, binPath });
+    await downloadFile(url + filename, filename, userDataPath);
+    paths.push(filePath);
+  }
+
+  event.reply(UI.END.DOWNLOAD_SEGMENTATION_MODEL, paths);
 });
 
 ipcMain.on(BE.START.OV.SSD_INFERENCE, async (event, {

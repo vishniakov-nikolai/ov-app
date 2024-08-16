@@ -9,6 +9,10 @@ import InferenceTime from '../components/inference-time';
 import { BE, UI } from '../../constants';
 
 const DEFAULT_DEVICE = 'AUTO';
+const PREDEFINED_MODELS = [
+  'road-segmentation-adas-0001',
+  'selfie-multiclass',
+];
 
 export default function SemanticSegmentationSamplePage() {
   const [isModelDownloading, setIsModelDownloading] = useState(false);
@@ -20,7 +24,7 @@ export default function SemanticSegmentationSamplePage() {
 
   useEffect(() => {
     setIsModelDownloading(true);
-    window.ipc.send(BE.START.DOWNLOAD_SEGMENTATION_MODEL);
+    window.ipc.send(BE.START.DOWNLOAD_SEGMENTATION_MODEL, PREDEFINED_MODELS[0]);
   }, []);
   useEffect(() => {
     return window.ipc.on(UI.END.SELECT_IMG, (imgPath) => {
@@ -31,7 +35,7 @@ export default function SemanticSegmentationSamplePage() {
       setInferenceTime(null);
 
       window.ipc.send(BE.START.OV.SSD_INFERENCE, {
-        modelLabel: 'road-segmentation-adas-0001',
+        modelLabel: PREDEFINED_MODELS[0],
         imgPath,
         device: selectedDevice
       });
