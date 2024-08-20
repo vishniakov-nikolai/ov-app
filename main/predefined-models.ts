@@ -1,21 +1,38 @@
 import path from 'node:path';
 import { app } from 'electron';
 
-import { preprocessSSDInput } from './preprocessors';
-import { postprocessSSDInput } from './postprocessors';
+import {
+  preprocessRoadSegInput,
+  preprocessSelfieMulticlassInput,
+} from './preprocessors';
+import { postprocessRoadSegInput } from './postprocessors';
 
 const userDataPath = app.getPath('userData');
 const MODEL_DIR = userDataPath;
 
 const predefinedModelsMapping = {
   'road-segmentation-adas-0001': {
-    preprocess: preprocessSSDInput,
-    postprocess: postprocessSSDInput,
+    preprocess: preprocessRoadSegInput,
+    postprocess: postprocessRoadSegInput,
     url: 'https://storage.openvinotoolkit.org/repositories/open_model_zoo/2022.3/models_bin/1/road-segmentation-adas-0001/FP32/',
     files: [
       'road-segmentation-adas-0001.xml',
       'road-segmentation-adas-0001.bin'
     ],
+    config: {
+      outputLayout: 'NCHW',
+    },
+  },
+  'selfie-multiclass': {
+    preprocess: preprocessSelfieMulticlassInput,
+    postprocess: postprocessRoadSegInput,
+    url: 'https://storage.googleapis.com/mediapipe-models/image_segmenter/selfie_multiclass_256x256/float32/latest/',
+    files: [
+      'selfie_multiclass_256x256.tflite',
+    ],
+    config: {
+      outputLayout: 'NHWC',
+    },
   },
 };
 

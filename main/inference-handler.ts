@@ -64,12 +64,21 @@ class InferenceHandler {
       elapsedTime: endTime - startTime,
     }
   }
+
+  get modelFilesPaths() {
+    return this.modelFiles;
+  }
 }
 
 const InferenceHandlerSingleton = (function() {
   let instance;
 
   async function get(modelFilePath?: string, modelWeightPath?: string) {
+    if (instance
+      && (modelFilePath !== instance.modelFilesPaths[0] || modelWeightPath !== instance.modelFilesPaths[1])) {
+      instance = null;
+    }
+
     if (!instance) {
       if (!modelFilePath)
         throw new Error('InferenceHandler should be initialized with modelFilePath');

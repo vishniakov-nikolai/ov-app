@@ -8,10 +8,38 @@ import {
   getImageBuffer,
 }  from './helpers/ov-helpers';
 
-export async function postprocessSSDInput(outputTensorsObj, imgPath, destPath) {
+class LayoutObj {
+  layoutStr: string;
+  shape: number[];
+
+  constructor(layout: string, shape: number[]) {
+    if (layout.length !== shape.length)
+      throw new Error('Shape and layout must have equal size');
+
+    this.layoutStr = layout;
+    this.shape = shape;
+  }
+
+  get(letter) {
+    const index = this.layoutStr.indexOf(letter);
+
+    if (index === -1)
+      throw new Error(`Layout '${this.layoutStr} doesn't contain '${letter}' component`);
+
+    return this.shape[index];
+  }
+}
+
+export async function postprocessRoadSegInput(
+  outputTensorsObj,
+  imgPath,
+  destPath,
+  config,
+  preprocessData,
+) {
   const outputTensor = Object.values(outputTensorsObj)[0] as { data: Float32Array };
   // Put output data at input image
-  const imgDataWithOutput = await placeTensorDataOnImg(imgPath, outputTensor);
+  const imgDataWithOutput = await placeTensorDataOnImg(imgPath, outputTensor, config.outputLayout, preprocessData);
 
   // Save result on disk
   const filename = `out-${new Date().getTime()}.jpg`;
@@ -27,14 +55,12 @@ async function saveArrayDataAsFile(path, arrayData) {
   await fs.writeFile(path, getImageBuffer(arrayData));
 }
 
-async function placeTensorDataOnImg(imgPath, tensor) {
+async function placeTensorDataOnImg(imgPath, tensor, layoutStr, preprocessData) {
+  const layout = new LayoutObj(layoutStr, tensor.getShape());
   const imgData = await getImageData(imgPath);
-
   const originalImage = cv.matFromImageData(imgData);
   const { cols: originalWidth, rows: originalHeight } = originalImage;
-
-  const { data: outputData } = tensor;
-  const inferenceResultLayer = [];
+  const inferenceResultLayer = getTopProbabilities(tensor.data, layout);
   const colormap = [
     [255, 99, 71, 255],   // Tomato
     [135, 206, 235, 255], // Sky Blue
@@ -47,36 +73,50 @@ async function placeTensorDataOnImg(imgPath, tensor) {
     [240, 230, 140, 255], // Khaki
     [0, 206, 209, 255],   // Dark Turquoise
     [138, 43, 226, 255],  // Blue Violet
-    [60, 179, 113, 255]   // Medium Sea Green
+    [60, 179, 113, 255],  // Medium Sea Green
   ];
-  const size = outputData.length / 4;
-
-  for (let i = 0; i < size; i++) {
-    const valueAt = (i, number) => outputData[i + number * size];
-
-    const currentValues = {
-      bg: valueAt(i, 0),
-      c: valueAt(i, 1),
-      h: valueAt(i, 2),
-      w: valueAt(i, 3),
-    };
-    const values = Object.values(currentValues);
-    const maxIndex = values.indexOf(Math.max(...values));
-
-    inferenceResultLayer.push(maxIndex);
-  }
 
   const pixels = [];
-  inferenceResultLayer.forEach(i => pixels.push(...colormap[i]));
+  inferenceResultLayer.map(i => pixels.push(...colormap[i]));
 
-  const alpha = 0.5;
-
-  const [H, W] = tensor.getShape().slice(2);
+  const alpha = 0.6;
+  const H = layout.get('H');
+  const W = layout.get('W');
   const pixelsAsImageData = arrayToImageData(pixels, W, H);
-  const mask = cv.matFromImageData(pixelsAsImageData);
+  let mask = cv.matFromImageData(pixelsAsImageData);
+
+  if (preprocessData?.padInfo) {
+    const { bottomPadding, rightPadding } = preprocessData.padInfo;
+
+    let rect = new cv.Rect(0, 0, W - rightPadding, H - bottomPadding);
+    mask = mask.roi(rect);
+  }
 
   cv.resize(mask, mask, new cv.Size(originalWidth, originalHeight));
   cv.addWeighted(mask, alpha, originalImage, 1 - alpha, 0, mask);
 
   return arrayToImageData(mask.data, originalWidth, originalHeight);
+}
+
+function getTopProbabilities(data: number[], layout: LayoutObj) {
+  const numberOfLayers = layout.get('C');
+  const size = data.length / numberOfLayers;
+
+  const chwValueAt = (idx: number, position: number) =>
+    data[idx + position * size];
+  const hwcValueAt = (idx: number, position: number) =>
+    data[idx * numberOfLayers + position];
+
+  let fn;
+
+  if (layout.layoutStr === 'NCHW') fn = chwValueAt;
+  if (layout.layoutStr === 'NHWC') fn = hwcValueAt;
+
+  const getComponents = idx => Array(numberOfLayers).fill(0).map((_, p) => fn(idx, p));
+
+  return Array(size).fill(0).map((_, i) => {
+    const components = getComponents(i);
+
+    return components.indexOf(Math.max(...components));
+  });
 }

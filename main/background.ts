@@ -84,13 +84,18 @@ ipcMain.on(BE.START.OV.SSD_INFERENCE, async (event, {
   event.reply(UI.START.SSD_INFERENCE);
   console.log(`== ${UI.START.SSD_INFERENCE}`, imgPath);
 
-  const inferenceResult = await runSSDInference({
-    modelLabel,
-    imgPath,
-    device,
-    destPath: userDataPath,
-  });
-  event.reply(UI.END.SSD_INFERENCE, inferenceResult);
+  try {
+    const inferenceResult = await runSSDInference({
+      modelLabel,
+      imgPath,
+      device,
+      destPath: userDataPath,
+    });
+    event.reply(UI.END.SSD_INFERENCE, inferenceResult);
+
+  } catch(e) {
+    event.reply(UI.EXCEPTION, e.message);
+  }
 });
 
 let mainWindow;

@@ -4,15 +4,19 @@ import { UpdateIcon } from '@radix-ui/react-icons';
 
 import Footer from '../components/footer';
 import { Button } from '../components/ui/button';
+import { Label } from '../components/ui/label';
+import { RadioGroup, RadioGroupItem } from '../components/ui/radio-group';
 import DeviceSelector from '../components/device-selector';
 import InferenceTime from '../components/inference-time';
 import { BE, UI } from '../../constants';
 
 const DEFAULT_DEVICE = 'AUTO';
+
 const PREDEFINED_MODELS = [
   'road-segmentation-adas-0001',
   'selfie-multiclass',
 ];
+const DEFAULT_MODEL = PREDEFINED_MODELS[0];
 
 export default function SemanticSegmentationSamplePage() {
   const [isModelDownloading, setIsModelDownloading] = useState(false);
@@ -20,12 +24,13 @@ export default function SemanticSegmentationSamplePage() {
   const [resultImg, setResultImg] = useState(null);
   const [isInferenceRunning, setIsInferenceRunning] = useState(false);
   const [inferenceTime, setInferenceTime] = useState(null);
+  const [selectedModel, setSelectedModel] = useState(DEFAULT_MODEL);
   const [selectedDevice, setSelectedDevice] = useState(DEFAULT_DEVICE);
 
   useEffect(() => {
     setIsModelDownloading(true);
-    window.ipc.send(BE.START.DOWNLOAD_SEGMENTATION_MODEL, PREDEFINED_MODELS[0]);
-  }, []);
+    window.ipc.send(BE.START.DOWNLOAD_SEGMENTATION_MODEL, selectedModel);
+  }, [selectedModel]);
   useEffect(() => {
     return window.ipc.on(UI.END.SELECT_IMG, (imgPath) => {
       if (!imgPath) return;
@@ -34,13 +39,15 @@ export default function SemanticSegmentationSamplePage() {
       setResultImg(null);
       setInferenceTime(null);
 
+      console.log(`Selected model: ${selectedModel}`);
+
       window.ipc.send(BE.START.OV.SSD_INFERENCE, {
-        modelLabel: PREDEFINED_MODELS[0],
+        modelLabel: selectedModel,
         imgPath,
         device: selectedDevice
       });
     });
-  }, [selectedDevice]);
+  }, [selectedDevice, selectedModel]);
   useEffect(() => {
     return window.ipc.on(UI.END.DOWNLOAD_SEGMENTATION_MODEL, (paths) => {
       console.log(paths);
@@ -65,6 +72,12 @@ export default function SemanticSegmentationSamplePage() {
       console.log('=== Inference done');
     });
   }, []);
+  useEffect(() => {
+    return window.ipc.on(UI.EXCEPTION, (errorMessage) => {
+      setIsInferenceRunning(false);
+      alert(errorMessage);
+    });
+  }, []);
 
   return (
     <React.Fragment>
@@ -81,27 +94,38 @@ export default function SemanticSegmentationSamplePage() {
       <div className="content w-auto">
         <div className="p-5">
           <h1 className="text-4xl mb-8">Semantic Segmentation Demo</h1>
-          <ul className="leading-10 mb-3">
-            <li>
-              <span className="mr-2">Model:</span>
-              <a target="_blank" href="https://docs.openvino.ai/2023.0/omz_models_model_road_segmentation_adas_0001.html">road-segmentation-adas-0001</a>
-            </li>
-            <li className="flex">
-              <span className="mr-2">Device:</span>
-              {selectedDevice}
-              <DeviceSelector
-                setSelectedDevice={setSelectedDevice}
-              />
-            </li>
-          </ul>
+          <fieldset disabled={isInferenceRunning}>
+            <ul className="leading-10 mb-3">
+              {/* <li>
+                <span className="mr-2">Model:</span>
 
-          <div className="mb-5">
-            <Button
-              onClick={() => window.ipc.send(BE.START.OV.SELECT_IMG)}
-              disabled={isInferenceRunning}
-              className="mr-2"
-            >Select Image</Button>
-          </div>
+              </li> */}
+              <li className="flex mb-3">
+                <span className="mr-2 w-[80px]">Model:</span>
+                <RadioGroup value={selectedModel} onValueChange={setSelectedModel}>
+                  { PREDEFINED_MODELS.map(m =>
+                    <div key={m} className="flex items-center space-x-2">
+                      <RadioGroupItem value={m} id={m} />
+                      <Label htmlFor={m}>{m}</Label>
+                    </div>
+                  ) }
+                </RadioGroup>
+              </li>
+              <li className="flex mb-3">
+                <span className="mr-2 w-[80px]">Device:</span>
+                <DeviceSelector
+                  setSelectedDevice={setSelectedDevice}
+                />
+              </li>
+            </ul>
+
+            <div className="mb-5">
+              <Button
+                onClick={() => window.ipc.send(BE.START.OV.SELECT_IMG)}
+                className="mr-2"
+              >Select Image</Button>
+            </div>
+          </fieldset>
           <div className="border border-gray flex min-h-80">
             <div className="w-1/2 flex items-center justify-center relative p-4">
               { userImg &&

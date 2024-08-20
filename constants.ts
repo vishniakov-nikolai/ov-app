@@ -15,6 +15,7 @@ const actions = {
       SSD_INFERENCE: 'ui.end.ssdRunInference',
       DOWNLOAD_SEGMENTATION_MODEL: 'ui.end.downloadSegmentationModel',
     },
+    EXCEPTION: 'ui.exception',
   },
   BE: {
     OPEN_SAMPLE: 'be.openSample',
