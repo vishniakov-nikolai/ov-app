@@ -20,7 +20,7 @@ const DEFAULT_MODEL = PREDEFINED_MODELS[0];
 
 export default function SemanticSegmentationSamplePage() {
   const [isModelDownloading, setIsModelDownloading] = useState(false);
-  const [userImg, setUserImg] = useState(null);
+  const [selectedImg, setSelectedImg] = useState(null);
   const [resultImg, setResultImg] = useState(null);
   const [isInferenceRunning, setIsInferenceRunning] = useState(false);
   const [inferenceTime, setInferenceTime] = useState(null);
@@ -35,17 +35,8 @@ export default function SemanticSegmentationSamplePage() {
     return window.ipc.on(UI.END.SELECT_IMG, (imgPath) => {
       if (!imgPath) return;
 
-      setUserImg(imgPath);
-      setResultImg(null);
-      setInferenceTime(null);
-
-      console.log(`Selected model: ${selectedModel}`);
-
-      window.ipc.send(BE.START.OV.SSD_INFERENCE, {
-        modelLabel: selectedModel,
-        imgPath,
-        device: selectedDevice
-      });
+      setSelectedImg(imgPath);
+      initiateInference(imgPath);
     });
   }, [selectedDevice, selectedModel]);
   useEffect(() => {
@@ -78,6 +69,22 @@ export default function SemanticSegmentationSamplePage() {
       alert(errorMessage);
     });
   }, []);
+  useEffect(() => {
+    setSelectedImg(null);
+    setResultImg(null);
+    setInferenceTime(null);
+  }, [selectedDevice, selectedModel]);
+
+  function initiateInference(imgPath) {
+    setResultImg(null);
+    setInferenceTime(null);
+
+    window.ipc.send(BE.START.OV.SSD_INFERENCE, {
+      modelLabel: selectedModel,
+      imgPath,
+      device: selectedDevice
+    });
+  }
 
   return (
     <React.Fragment>
@@ -96,10 +103,6 @@ export default function SemanticSegmentationSamplePage() {
           <h1 className="text-4xl mb-8">Semantic Segmentation Demo</h1>
           <fieldset disabled={isInferenceRunning}>
             <ul className="leading-10 mb-3">
-              {/* <li>
-                <span className="mr-2">Model:</span>
-
-              </li> */}
               <li className="flex mb-3">
                 <span className="mr-2 w-[80px]">Model:</span>
                 <RadioGroup value={selectedModel} onValueChange={setSelectedModel}>
@@ -124,12 +127,18 @@ export default function SemanticSegmentationSamplePage() {
                 onClick={() => window.ipc.send(BE.START.OV.SELECT_IMG)}
                 className="mr-2"
               >Select Image</Button>
+              { selectedImg &&
+                <Button
+                  variant="secondary"
+                  onClick={() => { initiateInference(selectedImg) }}
+                >Rerun Inference</Button>
+              }
             </div>
           </fieldset>
           <div className="border border-gray flex min-h-80">
             <div className="w-1/2 flex items-center justify-center relative p-4">
-              { userImg &&
-                <img src={userImg} alt="User img" className="absolute inset-0 w-full h-full object-contain p-2" />
+              { selectedImg &&
+                <img src={selectedImg} alt="User img" className="absolute inset-0 w-full h-full object-contain p-2" />
               }
               <span className="text-center text-xl">User Image</span>
             </div>
