@@ -6,6 +6,7 @@ import type {
   CompiledModel,
   InferRequest,
   Tensor,
+  Output,
 } from 'openvino-node';
 
 import { hrtime } from 'process';
@@ -34,11 +35,15 @@ class InferenceHandler {
       this.model = await this.core.readModel(this.modelFiles[0]);
   }
 
-  inputs() {
+  inputs(): Output[] {
     return this.model.inputs;
   }
 
-  async performInference(inputData: { [key: string]: Tensor }, device?: string) {
+  async performInference(inputData: { [key: string]: Tensor }, device?: string):
+    Promise<{
+      inferenceResult: { [outputName: string]: Tensor },
+      elapsedTime: BigInt,
+    }> {
     if (!this.compiledModel || this.selectedDevice !== device) {
       if (!this.compiledModel) console.log('== Compiled model is absent');
       if (this.selectedDevice !== device) console.log('== Device was changed');
@@ -51,13 +56,10 @@ class InferenceHandler {
       console.log('== Infer request created');
     }
 
-    const inferenceTimeLabel = 'Inference time';
-    console.time(inferenceTimeLabel);
     const startTime = hrtime.bigint();
     console.log(`Inference performes on ${this.selectedDevice}`);
-    const inferenceResult = await this.ir.inferAsync(inputData);
+    const inferenceResult = await InferenceHandler.inference(this.ir, inputData);
     const endTime = hrtime.bigint();
-    console.timeEnd(inferenceTimeLabel);
 
     return {
       inferenceResult,
@@ -65,15 +67,21 @@ class InferenceHandler {
     }
   }
 
-  get modelFilesPaths() {
+  @printExecutionTime('Inference time')
+  static inference(ir: InferRequest, input: { [inputName: string]: Tensor }):
+    Promise<{ [output: string]: Tensor }> {
+    return ir.inferAsync(input);
+  }
+
+  get modelFilesPaths(): string[] {
     return this.modelFiles;
   }
 }
 
 const InferenceHandlerSingleton = (function() {
-  let instance;
+  let instance: InferenceHandler | null;
 
-  async function get(modelFilePath?: string, modelWeightPath?: string) {
+  async function get(modelFilePath?: string, modelWeightPath?: string): Promise<InferenceHandler> {
     if (instance
       && (modelFilePath !== instance.modelFilesPaths[0] || modelWeightPath !== instance.modelFilesPaths[1])) {
       instance = null;
@@ -94,3 +102,19 @@ const InferenceHandlerSingleton = (function() {
 })();
 
 export default InferenceHandlerSingleton;
+export type { InferenceHandler };
+
+function printExecutionTime(label: string) {
+  return function<This, Args extends any[], Return>(
+    target: (this: This, ...args: Args) => Return,
+  ) {
+    function replacementMethod(this: This, ...args: Args): Return {
+      console.time(label);
+      const result = target.call(this, ...args);
+      console.timeEnd(label);
+      return result;
+    }
+
+    return replacementMethod;
+  };
+}

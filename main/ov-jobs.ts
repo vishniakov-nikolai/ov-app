@@ -1,5 +1,5 @@
 import getPredefinedModelConfig from './predefined-models';
-import InferenceHandlerSingleton from './inference-handler';
+import { InferenceHandlerSingleton } from './lib';
 
 export async function runSSDInference({
   modelLabel,
@@ -17,7 +17,7 @@ export async function runSSDInference({
   } = getPredefinedModelConfig(modelLabel);
 
   const ih = await InferenceHandlerSingleton.get(...paths);
-  const { input, preprocessData } = await preprocess(imgPath, ih, config);
+  const { input, preprocessData } = await preprocess(ih, imgPath, config);
 
   try {
     const {

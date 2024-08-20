@@ -3,7 +3,7 @@ const { addon: ov } = require('openvino-node');
 
 import { getImageData, transform }  from './helpers/ov-helpers';
 
-export async function preprocessRoadSegInput(imgPath, ih) {
+export async function preprocessRoadSegInput(ih, imgPath) {
   const inputs = ih.inputs();
   const inputLayer = inputs[0];
   const imgDataArray = await getArrayWithImgData(imgPath, inputLayer.shape);
@@ -15,7 +15,7 @@ export async function preprocessRoadSegInput(imgPath, ih) {
   };
 }
 
-export async function preprocessSelfieMulticlassInput(imgPath, ih) {
+export async function preprocessSelfieMulticlassInput(ih, imgPath) {
   const inputs = ih.inputs();
   const inputLayer = inputs[0];
   const imgData = await getImageData(imgPath);
