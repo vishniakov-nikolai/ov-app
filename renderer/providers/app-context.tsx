@@ -23,7 +23,7 @@ interface IAppContext {
   availableDevices: string[],
 };
 
-const DEFAULT_SAMPLE = 'ssd';
+const DEFAULT_SAMPLE = 'classification';
 
 const defaultContext: IAppContext = {
   ovInfo: {

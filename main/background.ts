@@ -46,7 +46,7 @@ ipcMain.on(BE.GET.OV.AVAILABLE_DEVICES, async (event) => {
 });
 
 ipcMain.on(BE.OPEN_SAMPLE, async (event, sample) => {
-  await createSampleWindow();
+  await createSampleWindow(sample);
 });
 
 ipcMain.on(BE.START.OV.SELECT_IMG, async (event) => {
@@ -128,7 +128,7 @@ async function main() {
   mainWindow.webContents.setWindowOpenHandler(openLinkInBrowserHandler);
 }
 
-async function createSampleWindow() {
+async function createSampleWindow(sample) {
   mainWindow.hide();
 
   const sampleWindow = createWindow('sampleWindow', {
@@ -144,7 +144,7 @@ async function createSampleWindow() {
     autoHideMenuBar: true,
   });
 
-  await loadWindowURL(sampleWindow, 'semantic-segmentation');
+  await loadWindowURL(sampleWindow, sample);
 
   sampleWindow.webContents.setWindowOpenHandler(openLinkInBrowserHandler);
 

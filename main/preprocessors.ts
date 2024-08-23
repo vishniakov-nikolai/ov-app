@@ -2,11 +2,29 @@ const { cv } = require('opencv-wasm');
 const { addon: ov } = require('openvino-node');
 
 import { getImageData, transform }  from './helpers/ov-helpers';
+import { InferenceHandler, LayoutObj } from './lib';
 
-export async function preprocessRoadSegInput(ih, imgPath) {
+import type { Tensor } from 'openvino-node';
+
+export type IPreprocess = (
+  ih: InferenceHandler,
+  imgPath: string,
+  config?: {
+    inputLayout?: string,
+    outputLayout?: string,
+  },
+) => Promise<{
+  input: { [inputName: string]: Tensor },
+  preprocessData?: Object,
+}>;
+
+export { preprocessImageToTensor, preprocessSelfieMulticlassInput };
+
+const preprocessImageToTensor: IPreprocess = async function(ih, imgPath, config) {
   const inputs = ih.inputs();
   const inputLayer = inputs[0];
-  const imgDataArray = await getArrayWithImgData(imgPath, inputLayer.shape);
+  const layout = new LayoutObj(config.inputLayout, inputLayer.shape);
+  const imgDataArray = await getArrayWithImgData(imgPath, layout);
 
   return {
     input: {
@@ -15,7 +33,7 @@ export async function preprocessRoadSegInput(ih, imgPath) {
   };
 }
 
-export async function preprocessSelfieMulticlassInput(ih, imgPath) {
+const preprocessSelfieMulticlassInput: IPreprocess = async function(ih, imgPath) {
   const inputs = ih.inputs();
   const inputLayer = inputs[0];
   const imgData = await getImageData(imgPath);
@@ -33,7 +51,7 @@ export async function preprocessSelfieMulticlassInput(ih, imgPath) {
   };
 }
 
-async function getArrayWithImgData(imgPath, shape) {
+async function getArrayWithImgData(imgPath: string, layout: LayoutObj) {
   const imgData = await getImageData(imgPath);
 
   const originalImage = cv.matFromImageData(imgData);
@@ -42,11 +60,14 @@ async function getArrayWithImgData(imgPath, shape) {
   cv.cvtColor(originalImage, image, cv.COLOR_RGBA2RGB);
   cv.cvtColor(image, image, cv.COLOR_BGR2RGB);
 
-  const [H, W] = shape.slice(2);
+  const [H, W] = [layout.get('H'), layout.get('W')];
+  console.log({ H, W });
 
   cv.resize(image, image, new cv.Size(W, H));
 
-  const inputImage = transform(image.data, { width: W, height: H }, [0, 1, 2]); // NHWC to NCHW
+  const inputImage = layout.layoutStr === 'NHWC'
+    ? image.data
+    : transform(image.data, { width: W, height: H }, [0, 1, 2]); // NHWC to NCHW
 
   return new Float32Array(inputImage);
 }

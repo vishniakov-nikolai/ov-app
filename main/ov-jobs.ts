@@ -15,9 +15,9 @@ export async function runSSDInference({
     postprocess,
     config,
   } = getPredefinedModelConfig(modelLabel);
-
   const ih = await InferenceHandlerSingleton.get(...paths);
   const { input, preprocessData } = await preprocess(ih, imgPath, config);
+  const t = input[ih.inputs()[0].anyName];
 
   try {
     const {

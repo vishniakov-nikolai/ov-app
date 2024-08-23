@@ -37,9 +37,9 @@ export default function HomePage() {
             <SelectValue placeholder="Select Task" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="ssd">Semantic Segmentation</SelectItem>
             <SelectItem value="classification">Classification</SelectItem>
-            <SelectItem value="od">Object Detection</SelectItem>
+            <SelectItem value="semantic-segmentation">Semantic Segmentation</SelectItem>
+            <SelectItem value="object-detection">Object Detection</SelectItem>
           </SelectContent>
         </Select>
 

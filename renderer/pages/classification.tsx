@@ -13,15 +13,14 @@ import { BE, UI } from '../../constants';
 const DEFAULT_DEVICE = 'AUTO';
 
 const PREDEFINED_MODELS = [
-  'road-segmentation-adas-0001',
-  'selfie-multiclass',
+  'v3-small_224_1.0_float',
 ];
 const DEFAULT_MODEL = PREDEFINED_MODELS[0];
 
 export default function SemanticSegmentationSamplePage() {
   const [isModelDownloading, setIsModelDownloading] = useState(false);
   const [selectedImg, setSelectedImg] = useState(null);
-  const [resultImg, setResultImg] = useState(null);
+  const [resultData, setResultData] = useState([]);
   const [isInferenceRunning, setIsInferenceRunning] = useState(false);
   const [inferenceTime, setInferenceTime] = useState(null);
   const [selectedModel, setSelectedModel] = useState(DEFAULT_MODEL);
@@ -54,14 +53,11 @@ export default function SemanticSegmentationSamplePage() {
   useEffect(() => {
     return window.ipc.on(UI.END.SSD_INFERENCE, (inferenceResult:
       {
-        outputPath?: string,
+        data?: { prediction: number, classId: number }[],
         elapsedTime: BigInt,
       }) => {
-      if (!inferenceResult.outputPath)
-        throw new Error('Something went wrong, output path is empty');
-
       setIsInferenceRunning(false);
-      setResultImg(inferenceResult.outputPath);
+      setResultData(inferenceResult.data);
       setInferenceTime(inferenceResult.elapsedTime);
       console.log('=== Inference done');
     });
@@ -74,12 +70,12 @@ export default function SemanticSegmentationSamplePage() {
   }, []);
   useEffect(() => {
     setSelectedImg(null);
-    setResultImg(null);
+    setResultData(null);
     setInferenceTime(null);
   }, [selectedDevice, selectedModel]);
 
   function initiateInference(imgPath) {
-    setResultImg(null);
+    setResultData(null);
     setInferenceTime(null);
 
     window.ipc.send(BE.START.OV.SSD_INFERENCE, {
@@ -92,7 +88,7 @@ export default function SemanticSegmentationSamplePage() {
   return (
     <React.Fragment>
       <Head>
-        <title>OpenVINO App | Semantic Segmentation Demo</title>
+        <title>OpenVINO App | Classification Demo</title>
       </Head>
       {
         isModelDownloading &&
@@ -103,7 +99,7 @@ export default function SemanticSegmentationSamplePage() {
       }
       <div className="content w-auto">
         <div className="p-5">
-          <h1 className="text-4xl mb-8">Semantic Segmentation Demo</h1>
+          <h1 className="text-4xl mb-8">Classification Demo</h1>
           <fieldset disabled={isInferenceRunning}>
             <ul className="leading-10 mb-3">
               <li className="flex mb-3">
@@ -146,16 +142,18 @@ export default function SemanticSegmentationSamplePage() {
               <span className="text-center text-xl">User Image</span>
             </div>
             <div className="w-1/2 flex items-center justify-center relative p-4">
-              { resultImg &&
-                <img src={resultImg} alt="Result img" className="absolute inset-0 w-full h-full object-contain p-2" />
+              { resultData &&
+                JSON.stringify(resultData)
               }
-              <span className="text-center text-xl">
-                {
-                  isInferenceRunning
-                    ? <UpdateIcon className="mr-2 h-4 w-4 animate-spin" />
-                    : 'Result Image'
-                }
-              </span>
+              { !resultData &&
+                <span className="text-center text-xl">
+                  {
+                    isInferenceRunning
+                      ? <UpdateIcon className="mr-2 h-4 w-4 animate-spin" />
+                      : 'Results'
+                  }
+                </span>
+              }
             </div>
           </div>
           {

@@ -9,7 +9,44 @@ import {
 }  from './helpers/ov-helpers';
 import { LayoutObj } from './lib';
 
-export async function postprocessSegmentationOutput(
+import type { Tensor } from 'openvino-node';
+
+export type IPostprocess = (
+  output: { [outputName: string]: Tensor },
+  inputImgPath: string,
+  // FIXME: Change that. Not all models has image as result.
+  resultImagePath: string,
+  config: {
+    inputLayout?: string,
+    outputLayout?: string,
+  },
+  preprocessData: Object,
+) => Promise<{
+  outputPath?: string,
+  data?: number[] | { prediction: number, classId: number }[],
+}>; // FIXME: Also needs to be refactored
+
+export { postprocessClassificationOutput, postprocessSegmentationOutput };
+
+const postprocessClassificationOutput: IPostprocess = async function(
+  outputTensorsObj,
+  imgPath,
+  destPath,
+  config,
+  preprocessData,
+) {
+  const MAX_DISPLAY_CLASSES = 5;
+  const outputTensor = Object.values(outputTensorsObj)[0];
+
+  const predictions = Array.from(outputTensor.data)
+    .map((prediction, classId) => ({ prediction, classId }))
+    .sort(({ prediction: predictionA }, { prediction: predictionB }) =>
+      predictionA === predictionB ? 0 : predictionA > predictionB ? -1 : 1);
+
+  return { data: predictions.slice(0, MAX_DISPLAY_CLASSES) };
+}
+
+const postprocessSegmentationOutput: IPostprocess = async function(
   outputTensorsObj,
   imgPath,
   destPath,

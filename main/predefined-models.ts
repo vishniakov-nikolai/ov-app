@@ -1,14 +1,18 @@
 import path from 'node:path';
 
 import { app } from 'electron';
-import type { Tensor } from 'openvino-node';
 
 import {
-  preprocessRoadSegInput,
+  preprocessImageToTensor,
   preprocessSelfieMulticlassInput,
 } from './preprocessors';
-import { postprocessSegmentationOutput } from './postprocessors';
-import { InferenceHandler } from './lib';
+import {
+  postprocessClassificationOutput,
+  postprocessSegmentationOutput,
+} from './postprocessors';
+
+import type { IPreprocess } from './preprocessors';
+import type { IPostprocess } from './postprocessors';
 
 const userDataPath = app.getPath('userData');
 const MODEL_DIR = userDataPath;
@@ -18,21 +22,12 @@ type Task = 'classification' | 'ssd';
 interface IModelConfig {
   name: string,
   task: Task,
-  preprocess: (ih: InferenceHandler, imgPath: string, config?: Object) => Promise<{
-    input: { [inputName: string]: Tensor },
-    preprocessData?: Object,
-  }>,
-  postprocess: (
-    output: { [outputName: string]: Tensor },
-    inputImgPath: string,
-    // FIXME: Change that. Not all models has image as result.
-    resultImagePath: string,
-    config: Object,
-    preprocessData: Object,
-  ) => Promise<{ outputPath }>, // FIXME: Also needs to be refactored
+  preprocess: IPreprocess,
+  postprocess: IPostprocess,
   url: string,
   files: string[],
   config: {
+    inputLayout?: string,
     outputLayout?: string,
   }
 };
@@ -47,9 +42,10 @@ const predefinedModels: IModelConfig[] = [
       'road-segmentation-adas-0001.bin'
     ],
     config: {
+      inputLayout: 'NCHW',
       outputLayout: 'NCHW',
     },
-    preprocess: preprocessRoadSegInput,
+    preprocess: preprocessImageToTensor,
     postprocess: postprocessSegmentationOutput,
   },
   {
@@ -60,6 +56,7 @@ const predefinedModels: IModelConfig[] = [
       'selfie_multiclass_256x256.tflite',
     ],
     config: {
+      inputLayout: 'NHWC',
       outputLayout: 'NHWC',
     },
     preprocess: preprocessSelfieMulticlassInput,
@@ -74,10 +71,10 @@ const predefinedModels: IModelConfig[] = [
       'v3-small_224_1.0_float.bin',
     ],
     config: {
-      outputLayout: '',
+      inputLayout: 'NHWC',
     },
-    preprocess: preprocessSelfieMulticlassInput,
-    postprocess: postprocessSegmentationOutput,
+    preprocess: preprocessImageToTensor,
+    postprocess: postprocessClassificationOutput,
   },
 ];
 
