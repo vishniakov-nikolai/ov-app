@@ -5,14 +5,12 @@ import { getImageData, transform }  from './helpers/ov-helpers';
 import { InferenceHandler, LayoutObj } from './lib';
 
 import type { Tensor } from 'openvino-node';
+import ModelConfig from './predefined-models';
 
 export type IPreprocess = (
   ih: InferenceHandler,
+  modelConfig: ModelConfig,
   imgPath: string,
-  config?: {
-    inputLayout?: string,
-    outputLayout?: string,
-  },
 ) => Promise<{
   input: { [inputName: string]: Tensor },
   preprocessData?: Object,
@@ -20,10 +18,11 @@ export type IPreprocess = (
 
 export { preprocessImageToTensor, preprocessSelfieMulticlassInput };
 
-const preprocessImageToTensor: IPreprocess = async function(ih, imgPath, config) {
+const preprocessImageToTensor: IPreprocess = async function(ih, modelConfig, imgPath) {
+  const { inputLayout } = modelConfig;
   const inputs = ih.inputs();
   const inputLayer = inputs[0];
-  const layout = new LayoutObj(config.inputLayout, inputLayer.shape);
+  const layout = new LayoutObj(inputLayout, inputLayer.shape);
   const imgDataArray = await getArrayWithImgData(imgPath, layout);
 
   return {
@@ -33,7 +32,7 @@ const preprocessImageToTensor: IPreprocess = async function(ih, imgPath, config)
   };
 }
 
-const preprocessSelfieMulticlassInput: IPreprocess = async function(ih, imgPath) {
+const preprocessSelfieMulticlassInput: IPreprocess = async function(ih, modelConfig, imgPath) {
   const inputs = ih.inputs();
   const inputLayer = inputs[0];
   const imgData = await getImageData(imgPath);

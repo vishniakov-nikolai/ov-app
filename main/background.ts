@@ -16,6 +16,7 @@ import { addon as ov } from 'openvino-node';
 import { runSSDInference } from './ov-jobs';
 import { BE, UI } from '../constants';
 import getPredefinedModelConfig from './predefined-models';
+import ModelConfig from './predefined-models';
 
 const isProd = process.env.NODE_ENV === 'production';
 const userDataPath = app.getPath('userData');
@@ -60,18 +61,12 @@ ipcMain.on(BE.START.OV.SELECT_IMG, async (event) => {
 
 ipcMain.on(BE.START.DOWNLOAD_SEGMENTATION_MODEL, async (event, modelLabel) => {
   console.log(`== ${BE.START.DOWNLOAD_SEGMENTATION_MODEL}: ${modelLabel}`);
-
-  const { url, files } = getPredefinedModelConfig(modelLabel);
+  const modelConfig = ModelConfig.get(modelLabel);
   const paths = [];
 
-  for (const filename of files) {
-    let filePath = path.join(userDataPath, filename);
-
-    if (await isFileExists(filePath)) continue;
-
-    await downloadFile(url + filename, filename, userDataPath);
-    paths.push(filePath);
-  }
+  await modelConfig.downloadModelFiles();
+  // FIXME: Put assets in separate folder
+  await modelConfig.downloadAssetsFiles();
 
   event.reply(UI.END.DOWNLOAD_SEGMENTATION_MODEL, paths);
 });

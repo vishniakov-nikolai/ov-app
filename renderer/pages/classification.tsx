@@ -9,6 +9,7 @@ import { RadioGroup, RadioGroupItem } from '../components/ui/radio-group';
 import DeviceSelector from '../components/device-selector';
 import InferenceTime from '../components/inference-time';
 import { BE, UI } from '../../constants';
+import DistributionGraph from '../components/distribution-graph';
 
 const DEFAULT_DEVICE = 'AUTO';
 
@@ -21,6 +22,7 @@ export default function SemanticSegmentationSamplePage() {
   const [isModelDownloading, setIsModelDownloading] = useState(false);
   const [selectedImg, setSelectedImg] = useState(null);
   const [resultData, setResultData] = useState([]);
+  const [dictionary, setDictionary] = useState([]);
   const [isInferenceRunning, setIsInferenceRunning] = useState(false);
   const [inferenceTime, setInferenceTime] = useState(null);
   const [selectedModel, setSelectedModel] = useState(DEFAULT_MODEL);
@@ -55,10 +57,12 @@ export default function SemanticSegmentationSamplePage() {
       {
         data?: { prediction: number, classId: number }[],
         elapsedTime: BigInt,
+        dictionary: { [classId: number]: [string, string] },
       }) => {
       setIsInferenceRunning(false);
       setResultData(inferenceResult.data);
       setInferenceTime(inferenceResult.elapsedTime);
+      setDictionary(preprocessDict(inferenceResult.dictionary));
       console.log('=== Inference done');
     });
   }, []);
@@ -72,6 +76,7 @@ export default function SemanticSegmentationSamplePage() {
     setSelectedImg(null);
     setResultData(null);
     setInferenceTime(null);
+    setDictionary([]);
   }, [selectedDevice, selectedModel]);
 
   function initiateInference(imgPath) {
@@ -143,7 +148,7 @@ export default function SemanticSegmentationSamplePage() {
             </div>
             <div className="w-1/2 flex items-center justify-center relative p-4">
               { resultData &&
-                JSON.stringify(resultData)
+                <DistributionGraph probablities={resultData} dictionary={dictionary} />
               }
               { !resultData &&
                 <span className="text-center text-xl">
@@ -166,4 +171,10 @@ export default function SemanticSegmentationSamplePage() {
 
     </React.Fragment>
   )
+}
+
+function preprocessDict(dictionary: { [classId: number]: [string, string] }) {
+  const size = Object.keys(dictionary).length;
+
+  return Array.from({ length: size }, (_, idx) => dictionary[idx][1]);
 }

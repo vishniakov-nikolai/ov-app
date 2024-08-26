@@ -92,6 +92,7 @@ const InferenceHandlerSingleton = (function() {
         throw new Error('InferenceHandler should be initialized with modelFilePath');
 
       instance = new InferenceHandler([modelFilePath, modelWeightPath]);
+      console.log('initialized: ', {modelFilePath, modelWeightPath});
       await instance.initialize();
     }
 

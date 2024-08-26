@@ -9,17 +9,15 @@ import {
 }  from './helpers/ov-helpers';
 import { LayoutObj } from './lib';
 
-import type { Tensor } from 'openvino-node';
+import type { Tensor, SupportedTypedArray } from 'openvino-node';
+import ModelConfig from './predefined-models';
 
 export type IPostprocess = (
+  modelConfig: ModelConfig,
   output: { [outputName: string]: Tensor },
   inputImgPath: string,
   // FIXME: Change that. Not all models has image as result.
   resultImagePath: string,
-  config: {
-    inputLayout?: string,
-    outputLayout?: string,
-  },
   preprocessData: Object,
 ) => Promise<{
   outputPath?: string,
@@ -29,10 +27,10 @@ export type IPostprocess = (
 export { postprocessClassificationOutput, postprocessSegmentationOutput };
 
 const postprocessClassificationOutput: IPostprocess = async function(
+  modelConfig,
   outputTensorsObj,
   imgPath,
   destPath,
-  config,
   preprocessData,
 ) {
   const MAX_DISPLAY_CLASSES = 5;
@@ -43,19 +41,26 @@ const postprocessClassificationOutput: IPostprocess = async function(
     .sort(({ prediction: predictionA }, { prediction: predictionB }) =>
       predictionA === predictionB ? 0 : predictionA > predictionB ? -1 : 1);
 
-  return { data: predictions.slice(0, MAX_DISPLAY_CLASSES) };
+  const dictionaryPath = modelConfig.assetsPaths[0];
+  const dictionaryContent = await fs.readFile(dictionaryPath, 'utf-8');
+  const dictionary = JSON.parse(dictionaryContent);
+
+  return {
+    data: predictions.slice(0, MAX_DISPLAY_CLASSES),
+    dictionary,
+  };
 }
 
 const postprocessSegmentationOutput: IPostprocess = async function(
+  modelConfig,
   outputTensorsObj,
   imgPath,
   destPath,
-  config,
   preprocessData,
 ) {
-  const outputTensor = Object.values(outputTensorsObj)[0] as { data: Float32Array };
+  const outputTensor = Object.values(outputTensorsObj)[0];
   // Put output data at input image
-  const imgDataWithOutput = await placeTensorDataOnImg(imgPath, outputTensor, config.outputLayout, preprocessData);
+  const imgDataWithOutput = await placeTensorDataOnImg(imgPath, outputTensor, modelConfig.outputLayout, preprocessData);
 
   // Save result on disk
   const filename = `out-${new Date().getTime()}.jpg`;
@@ -71,7 +76,12 @@ async function saveArrayDataAsFile(path, arrayData) {
   await fs.writeFile(path, getImageBuffer(arrayData));
 }
 
-async function placeTensorDataOnImg(imgPath, tensor, layoutStr, preprocessData) {
+async function placeTensorDataOnImg(
+  imgPath: string,
+  tensor: Tensor,
+  layoutStr: string,
+  preprocessData: { padInfo?: { bottomPadding, rightPadding } },
+) {
   const layout = new LayoutObj(layoutStr, tensor.getShape());
   const imgData = await getImageData(imgPath);
   const originalImage = cv.matFromImageData(imgData);
@@ -114,7 +124,7 @@ async function placeTensorDataOnImg(imgPath, tensor, layoutStr, preprocessData) 
   return arrayToImageData(mask.data, originalWidth, originalHeight);
 }
 
-function getTopProbabilities(data: number[], layout: LayoutObj) {
+function getTopProbabilities(data: SupportedTypedArray, layout: LayoutObj) {
   const numberOfLayers = layout.get('C');
   const size = data.length / numberOfLayers;
 

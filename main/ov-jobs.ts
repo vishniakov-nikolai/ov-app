@@ -1,4 +1,4 @@
-import getPredefinedModelConfig from './predefined-models';
+import ModelConfig from './predefined-models';
 import { InferenceHandlerSingleton } from './lib';
 
 export async function runSSDInference({
@@ -9,15 +9,10 @@ export async function runSSDInference({
 }) {
   console.log(`Start inference of image: ${imgPath}, device ${device} using model ${modelLabel}`);
 
-  const {
-    paths,
-    preprocess,
-    postprocess,
-    config,
-  } = getPredefinedModelConfig(modelLabel);
-  const ih = await InferenceHandlerSingleton.get(...paths);
-  const { input, preprocessData } = await preprocess(ih, imgPath, config);
-  const t = input[ih.inputs()[0].anyName];
+  const modelConfig = ModelConfig.get(modelLabel);
+  const { filesPaths, preprocess, postprocess } = modelConfig;
+  const ih = await InferenceHandlerSingleton.get(...filesPaths);
+  const { input, preprocessData } = await preprocess(ih, modelConfig, imgPath);
 
   try {
     const {
@@ -26,10 +21,10 @@ export async function runSSDInference({
     } = await ih.performInference(input, device);
     console.log({ inferenceResult });
     const postprocessResult = await postprocess(
+      modelConfig,
       inferenceResult,
       imgPath,
       destPath,
-      config,
       preprocessData,
     );
 
@@ -39,5 +34,6 @@ export async function runSSDInference({
     };
   } catch(e) {
     console.log(`Something went wrong. Error message: ${e.message}`);
+    console.log(e);
   }
 }
