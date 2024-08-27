@@ -71,6 +71,19 @@ const predefinedModels: IModelConfig[] = [
     preprocess: preprocessImageToTensor,
     postprocess: postprocessClassificationOutput,
   },
+  {
+    name: 'openvino_resnet50',
+    task: 'classification',
+    url: 'https://huggingface.co/Charles95/openvino_resnet50/resolve/main/',
+    files: [
+      'openvino_model.xml',
+      'openvino_model.bin',
+    ],
+    assetsUrls: ['https://storage.openvinotoolkit.org/repositories/openvino_notebooks/data/data/datasets/imagenet/imagenet_class_index.json'],
+    inputLayout: 'NHWC',
+    preprocess: preprocessImageToTensor,
+    postprocess: postprocessClassificationOutput,
+  },
 ];
 
 class File {

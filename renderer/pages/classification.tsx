@@ -176,5 +176,10 @@ export default function SemanticSegmentationSamplePage() {
 function preprocessDict(dictionary: { [classId: number]: [string, string] }) {
   const size = Object.keys(dictionary).length;
 
-  return Array.from({ length: size }, (_, idx) => dictionary[idx][1]);
+  return Array.from({ length: size }, (_, idx) => {
+    const value = dictionary[idx];
+
+    return typeof value === 'string' ? value
+      : value[1] || value[0];
+  });
 }
