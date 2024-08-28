@@ -43,7 +43,7 @@ const Context = createContext(defaultContext);
 export function AppContextProvider({ children }) {
   const [sample, setSample] = useState(DEFAULT_SAMPLE);
   const [ovInfo, setOvInfo] = useState(defaultContext.ovInfo);
-  const [availableDevices, setAvailableDevices] = useState(['AUTO']);
+  const [availableDevices, setAvailableDevices] = useState([]);
 
   const ctx = Object.assign({}, defaultContext, {
     sample,

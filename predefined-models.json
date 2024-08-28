@@ -1,0 +1,41 @@
+[
+  {
+    "name": "Charles95/openvino_resnet50",
+    "task": "image-classification"
+  },
+  {
+    "name": "IlyasMoutawwakil/vit-with-hidden_states",
+    "task": "image-classification"
+  },
+  {
+    "name": "helenai/microsoft-swin-tiny-patch4-window7-224-ov",
+    "task": "image-classification"
+  },
+  {
+    "name": "Xenova/convnextv2-tiny-1k-224",
+    "files": ["onnx/model.onnx"],
+    "task": "image-classification"
+  },
+
+  {
+    "name": "Xenova/segformer_b0_clothes",
+    "files": ["onnx/model.onnx"],
+    "task": "image-segmentation"
+  },
+  {
+    "name": "Xenova/segformer-b0-finetuned-cityscapes-640-1280",
+    "files": ["onnx/model.onnx"],
+    "task": "image-segmentation"
+  },
+
+  {
+    "name": "Xenova/yolos-tiny",
+    "files": ["onnx/model.onnx"],
+    "task": "object-detection"
+  },
+
+  {
+    "name": "helenai/gpt2-ov",
+    "task": "text-generation"
+  }
+]

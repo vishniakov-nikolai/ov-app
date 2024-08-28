@@ -25,12 +25,12 @@
     "electron-store": "^8.2.0",
     "https-proxy-agent": "^7.0.5",
     "lucide-react": "^0.414.0",
-    "opencv-wasm": "^4.3.0-10",
     "openvino-node": "^2024.3.0",
     "react-is": "^18.3.1",
     "recharts": "^2.12.7",
     "tailwind-merge": "^2.4.0",
-    "tailwindcss-animate": "^1.0.7"
+    "tailwindcss-animate": "^1.0.7",
+    "transformers.js": "vishniakov-nikolai/transformers.js#feature/openvino"
   },
   "devDependencies": {
     "@babel/plugin-proposal-decorators": "^7.24.7",

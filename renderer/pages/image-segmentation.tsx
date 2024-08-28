@@ -9,20 +9,19 @@ import { RadioGroup, RadioGroupItem } from '../components/ui/radio-group';
 import DeviceSelector from '../components/device-selector';
 import InferenceTime from '../components/inference-time';
 import { BE, UI } from '../../constants';
-import DistributionGraph from '../components/distribution-graph';
 
 const DEFAULT_DEVICE = 'AUTO';
 
 const PREDEFINED_MODELS = [
-  'v3-small_224_1.0_float',
+  'road-segmentation-adas-0001',
+  'selfie-multiclass',
 ];
 const DEFAULT_MODEL = PREDEFINED_MODELS[0];
 
-export default function SemanticSegmentationSamplePage() {
+export default function ImageSegmentationPage() {
   const [isModelDownloading, setIsModelDownloading] = useState(false);
   const [selectedImg, setSelectedImg] = useState(null);
-  const [resultData, setResultData] = useState([]);
-  const [dictionary, setDictionary] = useState([]);
+  const [resultImg, setResultImg] = useState(null);
   const [isInferenceRunning, setIsInferenceRunning] = useState(false);
   const [inferenceTime, setInferenceTime] = useState(null);
   const [selectedModel, setSelectedModel] = useState(DEFAULT_MODEL);
@@ -47,22 +46,25 @@ export default function SemanticSegmentationSamplePage() {
     });
   }, []);
   useEffect(() => {
-    return window.ipc.on(UI.START.SSD_INFERENCE, () => {
+    return window.ipc.on(UI.START.INFERENCE, () => {
       console.log('=== Inference running...');
       setIsInferenceRunning(true);
     });
   }, []);
   useEffect(() => {
-    return window.ipc.on(UI.END.SSD_INFERENCE, (inferenceResult:
+    return window.ipc.on(UI.END.INFERENCE, (inferenceResult:
       {
-        data?: { prediction: number, classId: number }[],
+        outputPath?: string,
         elapsedTime: BigInt,
-        dictionary: { [classId: number]: [string, string] },
       }) => {
+        console.log(inferenceResult);
+
+      if (!inferenceResult.outputPath)
+        throw new Error('Something went wrong, output path is empty');
+
       setIsInferenceRunning(false);
-      setResultData(inferenceResult.data);
+      setResultImg(inferenceResult.outputPath);
       setInferenceTime(inferenceResult.elapsedTime);
-      setDictionary(preprocessDict(inferenceResult.dictionary));
       console.log('=== Inference done');
     });
   }, []);
@@ -74,16 +76,15 @@ export default function SemanticSegmentationSamplePage() {
   }, []);
   useEffect(() => {
     setSelectedImg(null);
-    setResultData(null);
+    setResultImg(null);
     setInferenceTime(null);
-    setDictionary([]);
   }, [selectedDevice, selectedModel]);
 
   function initiateInference(imgPath) {
-    setResultData(null);
+    setResultImg(null);
     setInferenceTime(null);
 
-    window.ipc.send(BE.START.OV.SSD_INFERENCE, {
+    window.ipc.send(BE.START.OV.INFERENCE, {
       modelLabel: selectedModel,
       imgPath,
       device: selectedDevice
@@ -93,7 +94,7 @@ export default function SemanticSegmentationSamplePage() {
   return (
     <React.Fragment>
       <Head>
-        <title>OpenVINO App | Classification Demo</title>
+        <title>OpenVINO App | Semantic Segmentation Demo</title>
       </Head>
       {
         isModelDownloading &&
@@ -104,7 +105,7 @@ export default function SemanticSegmentationSamplePage() {
       }
       <div className="content w-auto">
         <div className="p-5">
-          <h1 className="text-4xl mb-8">Classification Demo</h1>
+          <h1 className="text-4xl mb-8">Semantic Segmentation Demo</h1>
           <fieldset disabled={isInferenceRunning}>
             <ul className="leading-10 mb-3">
               <li className="flex mb-3">
@@ -147,18 +148,16 @@ export default function SemanticSegmentationSamplePage() {
               <span className="text-center text-xl">User Image</span>
             </div>
             <div className="w-1/2 flex items-center justify-center relative p-4">
-              { resultData &&
-                <DistributionGraph probablities={resultData} dictionary={dictionary} />
+              { resultImg &&
+                <img src={resultImg} alt="Result img" className="absolute inset-0 w-full h-full object-contain p-2" />
               }
-              { !resultData &&
-                <span className="text-center text-xl">
-                  {
-                    isInferenceRunning
-                      ? <UpdateIcon className="mr-2 h-4 w-4 animate-spin" />
-                      : 'Results'
-                  }
-                </span>
-              }
+              <span className="text-center text-xl">
+                {
+                  isInferenceRunning
+                    ? <UpdateIcon className="mr-2 h-4 w-4 animate-spin" />
+                    : 'Result Image'
+                }
+              </span>
             </div>
           </div>
           {
@@ -171,15 +170,4 @@ export default function SemanticSegmentationSamplePage() {
 
     </React.Fragment>
   )
-}
-
-function preprocessDict(dictionary: { [classId: number]: [string, string] }) {
-  const size = Object.keys(dictionary).length;
-
-  return Array.from({ length: size }, (_, idx) => {
-    const value = dictionary[idx];
-
-    return typeof value === 'string' ? value
-      : value[1] || value[0];
-  });
 }

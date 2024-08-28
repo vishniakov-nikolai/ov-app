@@ -1,4 +1,5 @@
 import path from 'path';
+import fs from 'node:fs/promises';
 import {
   app,
   net,
@@ -11,15 +12,22 @@ import {
 } from 'electron';
 import serve from 'electron-serve';
 import url from 'node:url';
-import { createWindow, downloadFile, isFileExists } from './helpers';
+import { pipeline, env } from 'transformers.js';
 import { addon as ov } from 'openvino-node';
+
+import { createWindow } from './helpers';
 import { runSSDInference } from './ov-jobs';
 import { BE, UI } from '../constants';
-import getPredefinedModelConfig from './predefined-models';
-import ModelConfig from './predefined-models';
+import InferenceHandlerSingleton from './lib/inference-handler';
+import { PredefinedModel } from './lib';
+import { PredefinedModelConfig, TaskType } from '../globals/types';
+// import ModelConfig from './predefined-models';
 
 const isProd = process.env.NODE_ENV === 'production';
 const userDataPath = app.getPath('userData');
+const MODEL_CONFIG_PATH = './predefined-models.json';
+
+let lastInferenceTime: BigInt = 0n;
 
 if (isProd) {
   serve({ directory: 'app' });
@@ -46,8 +54,31 @@ ipcMain.on(BE.GET.OV.AVAILABLE_DEVICES, async (event) => {
   event.reply(UI.SET.OV.AVAILABLE_DEVICES, devices);
 });
 
-ipcMain.on(BE.OPEN_SAMPLE, async (event, sample) => {
-  await createSampleWindow(sample);
+ipcMain.on(BE.START.LOAD_MODELS_LIST, async (event) => {
+  let modelsConfig = [];
+
+  try {
+    modelsConfig = await getModelsConfig();
+  } catch(e) {
+    console.log(e.message);
+  }
+
+  event.reply(UI.END.LOAD_MODELS_LIST, modelsConfig);
+});
+
+ipcMain.on(BE.OPEN_MODEL, async (event, modelName) => {
+  let modelsConfig: PredefinedModelConfig[] = [];
+
+  try {
+    modelsConfig = await getModelsConfig();
+  } catch(e) {
+    console.log(e.message);
+    return;
+  }
+
+  const config = modelsConfig.find(m => m.name === modelName);
+
+  await createModelWindow(new PredefinedModel(config));
 });
 
 ipcMain.on(BE.START.OV.SELECT_IMG, async (event) => {
@@ -59,34 +90,34 @@ ipcMain.on(BE.START.OV.SELECT_IMG, async (event) => {
   event.reply(UI.END.SELECT_IMG, result.canceled ? null : result.filePaths[0]);
 });
 
-ipcMain.on(BE.START.DOWNLOAD_SEGMENTATION_MODEL, async (event, modelLabel) => {
-  console.log(`== ${BE.START.DOWNLOAD_SEGMENTATION_MODEL}: ${modelLabel}`);
-  const modelConfig = ModelConfig.get(modelLabel);
-  const paths = [];
+type InitModelParams = { modelName: string, device: string };
+ipcMain.on(BE.START.INIT_MODEL, async (event, params: InitModelParams) => {
+  console.log(`== INIT_MODEL: ${params.modelName}, device = '${params.device}'`);
+  const { modelName, device } = params;
+  const modelConfigs = await getModelsConfig();
+  const config = modelConfigs.find(m => m.name === modelName);
 
-  await modelConfig.downloadModelFiles();
-  // FIXME: Put assets in separate folder
-  await modelConfig.downloadAssetsFiles();
+  if (!config) throw new Error(`Model '${modelName}' is not found`);
 
-  event.reply(UI.END.DOWNLOAD_SEGMENTATION_MODEL, paths);
+  await InferenceHandlerSingleton.init(config, device,
+    (nanosec) => { lastInferenceTime = nanosec; });
+
+  event.reply(UI.END.INIT_MODEL, []);
 });
 
-ipcMain.on(BE.START.OV.SSD_INFERENCE, async (event, {
+ipcMain.on(BE.START.OV.INFERENCE, async (event, {
   modelLabel,
   imgPath,
   device,
 }) => {
-  event.reply(UI.START.SSD_INFERENCE);
-  console.log(`== ${UI.START.SSD_INFERENCE}`, imgPath);
+  event.reply(UI.START.INFERENCE);
+  console.log(`== ${UI.START.INFERENCE}`, imgPath);
+
+  const generator = InferenceHandlerSingleton.get();
 
   try {
-    const inferenceResult = await runSSDInference({
-      modelLabel,
-      imgPath,
-      device,
-      destPath: userDataPath,
-    });
-    event.reply(UI.END.SSD_INFERENCE, inferenceResult);
+    const output = await generator(imgPath, { topk: 5 });
+    event.reply(UI.END.INFERENCE, { data: output, elapsedTime: lastInferenceTime });
 
   } catch(e) {
     event.reply(UI.EXCEPTION, e.message);
@@ -107,23 +138,32 @@ async function main() {
   });
 
   mainWindow = createWindow('main', {
-    width: 650,
-    height: 500,
+    width: 1512,
+    height: 982,
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
     },
     titleBarOverlay: true,
     autoHideMenuBar: true,
-    maximizable: false,
+    // maximizable: false,
   });
-  mainWindow.setResizable(false);
+  // mainWindow.setResizable(false);
 
   await loadWindowURL(mainWindow, 'home');
 
   mainWindow.webContents.setWindowOpenHandler(openLinkInBrowserHandler);
+
+
+  function inferenceCallback(nanosec) {
+    console.log(`=== Inference time: ${formatNanoseconds(nanosec)}ms`)
+  }
+
+  function formatNanoseconds(bigNumber) {
+    return Math.floor(Number(bigNumber) / 1000000);
+  }
 }
 
-async function createSampleWindow(sample) {
+async function createModelWindow(modelConfig: PredefinedModel) {
   mainWindow.hide();
 
   const sampleWindow = createWindow('sampleWindow', {
@@ -139,9 +179,11 @@ async function createSampleWindow(sample) {
     autoHideMenuBar: true,
   });
 
-  await loadWindowURL(sampleWindow, sample);
+  await loadWindowURL(sampleWindow, `${modelConfig.task}?model=${modelConfig.name}`);
 
   sampleWindow.webContents.setWindowOpenHandler(openLinkInBrowserHandler);
+
+
 
   // FIXME: Doesn't call for some reason
   // sampleWindow.once('ready-to-show', () => {
@@ -167,4 +209,22 @@ function openLinkInBrowserHandler(details: HandlerDetails) {
   shell.openExternal(details.url); // Open URL in user's browser.
 
   return { action: 'deny' } as WindowOpenHandlerResponse; // Prevent the app from opening the URL.
+}
+
+async function sleep(time) {
+  return new Promise((res, rej) => setTimeout(() => {
+    res(true);
+  }, time));
+}
+
+async function getModelsConfig(): Promise<PredefinedModelConfig[]> {
+  const modelsConfigData = await fs.readFile(MODEL_CONFIG_PATH, 'utf-8');
+  const modelsConfig = JSON.parse(modelsConfigData);
+
+  modelsConfig.forEach(c => {
+    if (!PredefinedModel.isValid(c))
+      throw new Error(`Model config is invalid: ${JSON.stringify(c)}`);
+  });
+
+  return modelsConfig;
 }

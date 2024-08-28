@@ -8,17 +8,18 @@ const actions = {
       },
     },
     START: {
-      SSD_INFERENCE: 'ui.start.ssdRunInference',
+      INFERENCE: 'ui.start.runInference',
     },
     END: {
+      LOAD_MODELS_LIST: 'ui.end.loadModelsList',
       SELECT_IMG: 'ui.end.selectImg',
-      SSD_INFERENCE: 'ui.end.ssdRunInference',
-      DOWNLOAD_SEGMENTATION_MODEL: 'ui.end.downloadSegmentationModel',
+      INFERENCE: 'ui.end.runInference',
+      INIT_MODEL: 'ui.end.initModel',
     },
     EXCEPTION: 'ui.exception',
   },
   BE: {
-    OPEN_SAMPLE: 'be.openSample',
+    OPEN_MODEL: 'be.openModel',
     GET: {
       OV: {
         VERSION: 'be.get.ov.version',
@@ -26,10 +27,11 @@ const actions = {
       },
     },
     START: {
-      DOWNLOAD_SEGMENTATION_MODEL: 'be.start.downloadSegmentationModel',
+      LOAD_MODELS_LIST: 'be.start.loadModelsList',
+      INIT_MODEL: 'be.start.initModel',
       OV: {
         SELECT_IMG: 'be.start.ov.selectImg',
-        SSD_INFERENCE: 'be.start.ov.ssdInference',
+        INFERENCE: 'be.start.ov.inference',
       },
     },
   }
