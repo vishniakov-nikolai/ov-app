@@ -1,36 +1,45 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import Head from 'next/head';
 import { UpdateIcon } from '@radix-ui/react-icons';
+import { useSearchParams } from 'next/navigation'
 
 import Footer from '../components/footer';
 import { Button } from '../components/ui/button';
-import { Label } from '../components/ui/label';
-import { RadioGroup, RadioGroupItem } from '../components/ui/radio-group';
 import DeviceSelector from '../components/device-selector';
 import InferenceTime from '../components/inference-time';
 import { BE, UI } from '../../constants';
+import { ISegmentationResult } from '../../globals/types';
+import { SegmentationCanvas } from '../components/segmentation-canvas';
 
 const DEFAULT_DEVICE = 'AUTO';
 
-const PREDEFINED_MODELS = [
-  'road-segmentation-adas-0001',
-  'selfie-multiclass',
-];
-const DEFAULT_MODEL = PREDEFINED_MODELS[0];
-
 export default function ImageSegmentationPage() {
+  const searchParams = useSearchParams()
+  const modelName = searchParams.get('model');
+
+  const inputImgRef = useRef();
+
   const [isModelDownloading, setIsModelDownloading] = useState(false);
   const [selectedImg, setSelectedImg] = useState(null);
-  const [resultImg, setResultImg] = useState(null);
   const [isInferenceRunning, setIsInferenceRunning] = useState(false);
   const [inferenceTime, setInferenceTime] = useState(null);
-  const [selectedModel, setSelectedModel] = useState(DEFAULT_MODEL);
   const [selectedDevice, setSelectedDevice] = useState(DEFAULT_DEVICE);
+  const [segmentationResult, setSegmentationResult] = useState<ISegmentationResult[]>(null);
 
   useEffect(() => {
     setIsModelDownloading(true);
-    window.ipc.send(BE.START.DOWNLOAD_SEGMENTATION_MODEL, selectedModel);
-  }, [selectedModel]);
+
+    if (!modelName || !selectedDevice) return;
+
+    window.ipc.send(BE.START.INIT_MODEL, { modelName, device: selectedDevice });
+  }, [modelName, selectedDevice]);
+  useEffect(() => {
+    return window.ipc.on(UI.END.INIT_MODEL, (paths) => {
+      console.log(paths);
+      setIsModelDownloading(false);
+    });
+  }, []);
+
   useEffect(() => {
     return window.ipc.on(UI.END.SELECT_IMG, (imgPath) => {
       if (!imgPath) return;
@@ -38,13 +47,7 @@ export default function ImageSegmentationPage() {
       setSelectedImg(imgPath);
       initiateInference(imgPath);
     });
-  }, [selectedDevice, selectedModel]);
-  useEffect(() => {
-    return window.ipc.on(UI.END.DOWNLOAD_SEGMENTATION_MODEL, (paths) => {
-      console.log(paths);
-      setIsModelDownloading(false);
-    });
-  }, []);
+  }, [selectedDevice]);
   useEffect(() => {
     return window.ipc.on(UI.START.INFERENCE, () => {
       console.log('=== Inference running...');
@@ -54,16 +57,13 @@ export default function ImageSegmentationPage() {
   useEffect(() => {
     return window.ipc.on(UI.END.INFERENCE, (inferenceResult:
       {
-        outputPath?: string,
+        data: ISegmentationResult[],
         elapsedTime: BigInt,
       }) => {
         console.log(inferenceResult);
 
-      if (!inferenceResult.outputPath)
-        throw new Error('Something went wrong, output path is empty');
-
       setIsInferenceRunning(false);
-      setResultImg(inferenceResult.outputPath);
+      setSegmentationResult(inferenceResult.data);
       setInferenceTime(inferenceResult.elapsedTime);
       console.log('=== Inference done');
     });
@@ -76,16 +76,15 @@ export default function ImageSegmentationPage() {
   }, []);
   useEffect(() => {
     setSelectedImg(null);
-    setResultImg(null);
+    setSegmentationResult(null);
     setInferenceTime(null);
-  }, [selectedDevice, selectedModel]);
+  }, [selectedDevice]);
 
   function initiateInference(imgPath) {
-    setResultImg(null);
+    setSegmentationResult(null);
     setInferenceTime(null);
 
     window.ipc.send(BE.START.OV.INFERENCE, {
-      modelLabel: selectedModel,
       imgPath,
       device: selectedDevice
     });
@@ -94,7 +93,7 @@ export default function ImageSegmentationPage() {
   return (
     <React.Fragment>
       <Head>
-        <title>OpenVINO App | Semantic Segmentation Demo</title>
+        <title>{ `OpenVINO App | Image Sermentation | ${modelName}` }</title>
       </Head>
       {
         isModelDownloading &&
@@ -105,19 +104,12 @@ export default function ImageSegmentationPage() {
       }
       <div className="content w-auto">
         <div className="p-5">
-          <h1 className="text-4xl mb-8">Semantic Segmentation Demo</h1>
+          <h1 className="text-4xl mb-8">{modelName}</h1>
           <fieldset disabled={isInferenceRunning}>
             <ul className="leading-10 mb-3">
-              <li className="flex mb-3">
-                <span className="mr-2 w-[80px]">Model:</span>
-                <RadioGroup value={selectedModel} onValueChange={setSelectedModel}>
-                  { PREDEFINED_MODELS.map(m =>
-                    <div key={m} className="flex items-center space-x-2">
-                      <RadioGroupItem value={m} id={m} />
-                      <Label htmlFor={m}>{m}</Label>
-                    </div>
-                  ) }
-                </RadioGroup>
+            <li className="flex mb-3">
+                <span className="mr-2 w-[80px]">Task:</span>
+                Image Segmentation
               </li>
               <li className="flex mb-3">
                 <span className="mr-2 w-[80px]">Device:</span>
@@ -143,21 +135,23 @@ export default function ImageSegmentationPage() {
           <div className="border border-gray flex min-h-80">
             <div className="w-1/2 flex items-center justify-center relative p-4">
               { selectedImg &&
-                <img src={selectedImg} alt="User img" className="absolute inset-0 w-full h-full object-contain p-2" />
+                <img ref={inputImgRef} src={selectedImg} alt="User img" className="absolute inset-0 w-full h-full object-contain p-2" />
               }
               <span className="text-center text-xl">User Image</span>
             </div>
             <div className="w-1/2 flex items-center justify-center relative p-4">
-              { resultImg &&
-                <img src={resultImg} alt="Result img" className="absolute inset-0 w-full h-full object-contain p-2" />
+              { segmentationResult
+                ? <div className="w-full h-full">
+                  <SegmentationCanvas data={segmentationResult} img={inputImgRef} />
+                </div>
+                : <span className="text-center text-xl">
+                    {
+                      isInferenceRunning
+                        ? <UpdateIcon className="mr-2 h-4 w-4 animate-spin" />
+                        : 'Result Image'
+                    }
+                  </span>
               }
-              <span className="text-center text-xl">
-                {
-                  isInferenceRunning
-                    ? <UpdateIcon className="mr-2 h-4 w-4 animate-spin" />
-                    : 'Result Image'
-                }
-              </span>
             </div>
           </div>
           {

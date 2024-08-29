@@ -11,3 +11,14 @@ export type PredefinedModelConfig = {
   files?: string[],
   task: TaskType,
 };
+
+export interface ISegmentationResult {
+  label: string;
+  mask: {
+    channels: number,
+    data: Uint8ClampedArray,
+    height: number,
+    width: number,
+  };
+  score: number | null;
+};

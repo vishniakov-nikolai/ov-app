@@ -89,7 +89,7 @@ export default function ImageClassificationPage() {
   return (
     <React.Fragment>
       <Head>
-        <title>OpenVINO App | Classification Demo</title>
+        <title>OpenVINO App | Image Classification | {modelName}</title>
       </Head>
       {
         isModelDownloading &&
