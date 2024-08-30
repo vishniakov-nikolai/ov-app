@@ -3,7 +3,7 @@ export const SUPPORTED_TASKS = [
   'image-segmentation',
   'object-detection',
   'text-generation',
-] as const;
+];
 export type TaskType = typeof SUPPORTED_TASKS[number];
 
 export type PredefinedModelConfig = {

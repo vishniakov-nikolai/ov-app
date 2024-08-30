@@ -10,6 +10,7 @@ import InferenceTime from '../components/inference-time';
 import { BE, UI } from '../../constants';
 import { ISegmentationResult } from '../../globals/types';
 import { SegmentationCanvas } from '../components/segmentation-canvas';
+import RegionsList from '../components/regions-list';
 
 const DEFAULT_DEVICE = 'AUTO';
 
@@ -25,6 +26,7 @@ export default function ImageSegmentationPage() {
   const [inferenceTime, setInferenceTime] = useState(null);
   const [selectedDevice, setSelectedDevice] = useState(DEFAULT_DEVICE);
   const [segmentationResult, setSegmentationResult] = useState<ISegmentationResult[]>(null);
+  const [hoveredRegion, setHoveredRegion] = useState<string>(null);
 
   useEffect(() => {
     setIsModelDownloading(true);
@@ -60,8 +62,6 @@ export default function ImageSegmentationPage() {
         data: ISegmentationResult[],
         elapsedTime: BigInt,
       }) => {
-        console.log(inferenceResult);
-
       setIsInferenceRunning(false);
       setSegmentationResult(inferenceResult.data);
       setInferenceTime(inferenceResult.elapsedTime);
@@ -142,7 +142,11 @@ export default function ImageSegmentationPage() {
             <div className="w-1/2 flex items-center justify-center relative p-4">
               { segmentationResult
                 ? <div className="w-full h-full">
-                  <SegmentationCanvas data={segmentationResult} img={inputImgRef} />
+                  <SegmentationCanvas
+                    data={segmentationResult}
+                    img={inputImgRef}
+                    currentClass={hoveredRegion}
+                  />
                 </div>
                 : <span className="text-center text-xl">
                     {
@@ -154,6 +158,12 @@ export default function ImageSegmentationPage() {
               }
             </div>
           </div>
+          { segmentationResult?.length &&
+            <RegionsList
+              names={segmentationResult.map(v => v.label)}
+              setCurrentClass={setHoveredRegion}
+            />
+          }
           {
             inferenceTime &&
             <InferenceTime value={inferenceTime} />

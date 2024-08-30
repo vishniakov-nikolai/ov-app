@@ -12,16 +12,13 @@ import {
 } from 'electron';
 import serve from 'electron-serve';
 import url from 'node:url';
-import { pipeline, env } from 'transformers.js';
 import { addon as ov } from 'openvino-node';
 
 import { createWindow } from './helpers';
-import { runSSDInference } from './ov-jobs';
 import { BE, UI } from '../constants';
 import InferenceHandlerSingleton from './lib/inference-handler';
 import { PredefinedModel } from './lib';
-import { PredefinedModelConfig, TaskType } from '../globals/types';
-// import ModelConfig from './predefined-models';
+import { PredefinedModelConfig } from '../globals/types';
 
 const isProd = process.env.NODE_ENV === 'production';
 const userDataPath = app.getPath('userData');
@@ -182,8 +179,6 @@ async function createModelWindow(modelConfig: PredefinedModel) {
   await loadWindowURL(sampleWindow, `${modelConfig.task}?model=${modelConfig.name}`);
 
   sampleWindow.webContents.setWindowOpenHandler(openLinkInBrowserHandler);
-
-
 
   // FIXME: Doesn't call for some reason
   // sampleWindow.once('ready-to-show', () => {
