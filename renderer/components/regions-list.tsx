@@ -14,7 +14,8 @@ export default function RegionsList(props: RegionsListProps) {
 
     if (listRef.current && listRef.current.contains(elementUnderCursor)) {
       elementUnderCursor.classList.add('text-red-600');
-      setCurrentClass(elementUnderCursor.dataset.name);
+      if (elementUnderCursor instanceof HTMLElement)
+        setCurrentClass(elementUnderCursor.dataset.name);
     }
   };
   const handleMouseLeave = () => {
