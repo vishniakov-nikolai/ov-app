@@ -8,6 +8,7 @@ import {
 } from 'recharts';
 
 import { ChartContainer, type ChartConfig } from './ui/chart';
+import { round } from '../lib/utils';
 
 type IProbablities = { label: string, score: number }[];
 
@@ -44,10 +45,4 @@ export default function DistributionGraph(props: IDistributionGraph) {
       </BarChart>
     </ChartContainer>
   );
-}
-
-function round(number, decimalPlaces) {
-  const factor = Math.pow(10, decimalPlaces);
-
-  return Math.round(number * factor) / factor;
 }

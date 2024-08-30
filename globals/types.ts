@@ -22,3 +22,14 @@ export interface ISegmentationResult {
   };
   score: number | null;
 };
+
+export interface IDetectionResult {
+  label: string;
+  box: {
+    xmin: number,
+    xmax: number,
+    ymin: number,
+    ymax: number,
+  };
+  score: number | null;
+}

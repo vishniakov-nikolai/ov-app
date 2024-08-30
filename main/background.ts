@@ -96,8 +96,10 @@ ipcMain.on(BE.START.INIT_MODEL, async (event, params: InitModelParams) => {
 
   if (!config) throw new Error(`Model '${modelName}' is not found`);
 
+  console.log('== start init');
   await InferenceHandlerSingleton.init(config, device,
     (nanosec) => { lastInferenceTime = nanosec; });
+  console.log('== end init');
 
   event.reply(UI.END.INIT_MODEL, []);
 });
@@ -113,7 +115,9 @@ ipcMain.on(BE.START.OV.INFERENCE, async (event, {
   const generator = InferenceHandlerSingleton.get();
 
   try {
+    console.log('== start inference');
     const output = await generator(imgPath, { topk: 5 });
+    console.log('== end inference');
     event.reply(UI.END.INFERENCE, { data: output, elapsedTime: lastInferenceTime });
 
   } catch(e) {

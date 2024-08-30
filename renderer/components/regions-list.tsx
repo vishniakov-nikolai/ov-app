@@ -43,5 +43,7 @@ export default function RegionsList(props: RegionsListProps) {
 }
 
 function toRgbStr(color) {
+  if (!color) return '';
+
   return `rgb(${color.join(', ')})`;
 }

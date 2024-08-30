@@ -2,13 +2,6 @@ import React, { useEffect, useState } from 'react';
 import Head from 'next/head';
 import { UpdateIcon } from '@radix-ui/react-icons';
 
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '../components/ui/select';
 import Footer from '../components/footer';
 import { useAppContext } from '../providers/app-context';
 import { Button } from '../components/ui/button';
@@ -18,7 +11,6 @@ import ModelsList from '../components/models-list';
 import type { PredefinedModelConfig } from '../../globals/types';
 
 export default function HomePage() {
-  const { sample, defaultSample, setSample } = useAppContext();
   const [modelsList, setModelsList] = useState<PredefinedModelConfig[]>([]);
   const [isLoading, setIsLoading] = useState(false);
 
