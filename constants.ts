@@ -16,6 +16,7 @@ const actions = {
       INFERENCE: 'ui.end.runInference',
       INIT_MODEL: 'ui.end.initModel',
       SAVE_MODEL: 'ui.end.saveModel',
+      REMOVE_MODEL: 'ui.end.removeModel',
     },
     EXCEPTION: 'ui.exception',
   },
@@ -35,6 +36,7 @@ const actions = {
         INFERENCE: 'be.start.ov.inference',
       },
       SAVE_MODEL: 'be.start.ov.saveModel',
+      REMOVE_MODEL: 'be.start.ov.removeModel',
     },
   }
 };

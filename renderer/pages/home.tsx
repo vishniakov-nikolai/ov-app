@@ -36,6 +36,15 @@ export default function HomePage() {
       },
     );
   }, []);
+  useEffect(() => {
+    return window.ipc.on(
+      UI.END.REMOVE_MODEL,
+      (models: IModelConfig[]) => {
+        setModelsList(models);
+        setIsLoading(false);
+      },
+    );
+  }, []);
 
   return (
     <React.Fragment>
@@ -61,6 +70,7 @@ export default function HomePage() {
           models={modelsList}
           onSelect={(modelName) => window.ipc.send(BE.OPEN_MODEL, modelName)}
           onAdd={addModel}
+          onRemove={removeModel}
         />
         <Footer className="mt-auto border-t" />
       </div>
@@ -71,5 +81,11 @@ export default function HomePage() {
     setIsLoading(true);
 
     window.ipc.send(BE.START.SAVE_MODEL, { name, task, files });
+  }
+
+  function removeModel(name: string) {
+    setIsLoading(true);
+
+    window.ipc.send(BE.START.REMOVE_MODEL, { name });
   }
 }

@@ -92,6 +92,21 @@ ipcMain.on(BE.START.SAVE_MODEL, async (event, modelConfigData: IModelConfigData)
   event.reply(UI.END.SAVE_MODEL, applicationModels.models);
 });
 
+ipcMain.on(BE.START.REMOVE_MODEL, async (event, { name }: { name: string }) => {
+  const applicationModels = await applicationModelsSingleton.get();
+
+  try {
+    applicationModels.remove(name);
+  } catch(e) {
+    console.log(e.message);
+    return;
+  }
+
+  event.reply(UI.END.SAVE_MODEL, applicationModels.models);
+});
+
+
+
 type InitModelParams = { modelName: string, device: string };
 ipcMain.on(BE.START.INIT_MODEL, async (event, params: InitModelParams) => {
   console.log(`== INIT_MODEL: ${params.modelName}, device = '${params.device}'`);

@@ -104,8 +104,15 @@ class ApplicationModels {
     fs.writeFile(MODEL_CONFIG_PATH, JSON.stringify(config, null, 2), 'utf-8');
   }
 
-  get(name): ModelConfig {
+  get(name: string): ModelConfig {
     return this.models.find(m => m.name === name) || null;
+  }
+
+  async remove(name: string) {
+    this.models = this.models.filter(m => m.name !== name);
+    await this.save();
+
+    return await this.load();
   }
 }
 
