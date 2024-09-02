@@ -27,23 +27,31 @@ interface IDistributionGraph {
 export default function DistributionGraph(props: IDistributionGraph) {
   const { probablities } = props;
 
+  const CustomLabel = (props) => {
+    const { x, y, value } = props;
+    return (
+      <text x={x} y={y} dy={-3} textAnchor="start" fill="#000">
+        {value}
+      </text>
+    );
+  };
+
   return (
     <ChartContainer config={chartConfig} className="min-h-[200px] w-full">
-      <BarChart accessibilityLayer data={probablities} layout="vertical" margin={{ left: 100, right: 15 }}>
+      <BarChart
+        accessibilityLayer
+        data={probablities}
+        layout="vertical"
+        margin={{ top: 20, left: 10, right: 10 }}
+      >
         <CartesianGrid horizontal={false} />
         <XAxis type="number" dataKey="score"/>
-        <YAxis type="category"
-          dataKey="label"
-          axisLine={false}
-          tickLine={false}
-          tickFormatter={(value) => {
-            return value;
-          }}
-        />
-        <Bar dataKey="score" fill="var(--color-desktop)">
+        <YAxis type="category" hide />
+        <Bar dataKey="score" fill="var(--color-desktop)" barSize={20} minPointSize={5}>
           <LabelList dataKey="score" position="right" fill="black"
             formatter={(value) => round(value, 2)}
           />
+          <LabelList dataKey="label" position="bottom" content={CustomLabel} />
         </Bar>
       </BarChart>
     </ChartContainer>

@@ -6,7 +6,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { Button } from './ui/button';
 import { useState } from 'react';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from './ui/dialog';
-import { Cross2Icon, StarIcon, ImageIcon } from '@radix-ui/react-icons'
+import { Cross2Icon, ExternalLinkIcon, StarIcon } from '@radix-ui/react-icons'
+import Link from 'next/link';
 
 const categoriesMap = {
   'image-classification': <>
@@ -71,7 +72,10 @@ type ModelCardProps = {
 function ModelCard({ name, isDefault, isLocal, onSelect, onRemove }: ModelCardProps) {
   return <div className="border p-4 hover:border-primary hover:shadow-sm">
     <div className="flex mb-4 text-gray-400">
-      <StarIcon className="cursor-pointer" />
+      <StarIcon className="cursor-pointer hover:text-orange-300" />
+      <Link href={getHFLink(name)} target="_blank" className="text-inherit hover:text-primary">
+        <ExternalLinkIcon />
+      </Link>
       { !isDefault &&
         <Cross2Icon className="cursor-pointer ml-auto hover:text-red-500"
           onClick={() => { onRemove && onRemove(name); } }
@@ -152,10 +156,16 @@ function AddModelCard({ task, onClick }: AddModelCardProps) {
         <Button
           onClick={() => {
             onClick(name, localTask, files);
+            setName('');
+            setFiles('');
             setOpen(false);
           }}
         >Add Model</Button>
       </DialogFooter>
     </DialogContent>
   </Dialog>
+}
+
+function getHFLink(modelName) {
+  return `https://huggingface.co/${modelName}`;
 }
