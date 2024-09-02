@@ -1,6 +1,6 @@
 import { env, pipeline } from 'transformers.js';
-import { PredefinedModelConfig } from '../../globals/types';
-import { PredefinedModel } from '.';
+import { IModelConfig } from '../../globals/types';
+import { ModelConfig } from '.';
 
 const InferenceHandlerSingleton = (function() {
   let instance;
@@ -10,8 +10,8 @@ const InferenceHandlerSingleton = (function() {
   let _device: string = "AUTO";
   let _files: string[] = null;
 
-  async function init(config: PredefinedModelConfig, device = 'AUTO', inferenceCallback) {
-    const modelConfig = new PredefinedModel(config);
+  async function init(config: IModelConfig, device = 'AUTO', inferenceCallback) {
+    const modelConfig = new ModelConfig(config);
 
     if (instance && (_task !== modelConfig.task || _modelName !== modelConfig.name || _device !== device))
       instance = null;

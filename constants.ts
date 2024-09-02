@@ -15,6 +15,7 @@ const actions = {
       SELECT_IMG: 'ui.end.selectImg',
       INFERENCE: 'ui.end.runInference',
       INIT_MODEL: 'ui.end.initModel',
+      SAVE_MODEL: 'ui.end.saveModel',
     },
     EXCEPTION: 'ui.exception',
   },
@@ -33,6 +34,7 @@ const actions = {
         SELECT_IMG: 'be.start.ov.selectImg',
         INFERENCE: 'be.start.ov.inference',
       },
+      SAVE_MODEL: 'be.start.ov.saveModel',
     },
   }
 };

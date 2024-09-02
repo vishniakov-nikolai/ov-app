@@ -6,10 +6,11 @@ export const SUPPORTED_TASKS = [
 ];
 export type TaskType = typeof SUPPORTED_TASKS[number];
 
-export type PredefinedModelConfig = {
+export type IModelConfig = {
   name: string,
   files?: string[],
   task: TaskType,
+  default?: boolean,
 };
 
 export interface ISegmentationResult {
@@ -33,3 +34,5 @@ export interface IDetectionResult {
   };
   score: number | null;
 }
+
+export const MODEL_CONFIG_PATH = './models.json';

@@ -10,7 +10,8 @@ import {
 import { ChartContainer, type ChartConfig } from './ui/chart';
 import { round } from '../lib/utils';
 
-type IProbablities = { label: string, score: number }[];
+type IProbablity = { label: string, score: number };
+type IProbablities = IProbablity[];
 
 const chartConfig = {
   desktop: {
@@ -30,8 +31,10 @@ export default function DistributionGraph(props: IDistributionGraph) {
     <ChartContainer config={chartConfig} className="min-h-[200px] w-full">
       <BarChart accessibilityLayer data={probablities} layout="vertical" margin={{ left: 100, right: 15 }}>
         <CartesianGrid horizontal={false} />
-        <XAxis type="number"/>
-        <YAxis type="category" dataKey="label" axisLine={false}
+        <XAxis type="number" dataKey="score"/>
+        <YAxis type="category"
+          dataKey="label"
+          axisLine={false}
           tickLine={false}
           tickFormatter={(value) => {
             return value;

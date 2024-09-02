@@ -17,12 +17,13 @@ import { addon as ov } from 'openvino-node';
 import { createWindow } from './helpers';
 import { BE, UI } from '../constants';
 import InferenceHandlerSingleton from './lib/inference-handler';
-import { PredefinedModel } from './lib';
-import { PredefinedModelConfig } from '../globals/types';
+import { getApplicationModels, ModelConfig } from './lib';
+import { IModelConfig } from '../globals/types';
 
 const isProd = process.env.NODE_ENV === 'production';
 const userDataPath = app.getPath('userData');
-const MODEL_CONFIG_PATH = './predefined-models.json';
+
+const applicationModelsSingleton = getApplicationModels();
 
 let lastInferenceTime: BigInt = 0n;
 
@@ -52,30 +53,15 @@ ipcMain.on(BE.GET.OV.AVAILABLE_DEVICES, async (event) => {
 });
 
 ipcMain.on(BE.START.LOAD_MODELS_LIST, async (event) => {
-  let modelsConfig = [];
+  const applicationModels = await applicationModelsSingleton.get();
 
-  try {
-    modelsConfig = await getModelsConfig();
-  } catch(e) {
-    console.log(e.message);
-  }
-
-  event.reply(UI.END.LOAD_MODELS_LIST, modelsConfig);
+  event.reply(UI.END.LOAD_MODELS_LIST, applicationModels.models);
 });
 
 ipcMain.on(BE.OPEN_MODEL, async (event, modelName) => {
-  let modelsConfig: PredefinedModelConfig[] = [];
+  const applicationModels = await applicationModelsSingleton.get();
 
-  try {
-    modelsConfig = await getModelsConfig();
-  } catch(e) {
-    console.log(e.message);
-    return;
-  }
-
-  const config = modelsConfig.find(m => m.name === modelName);
-
-  await createModelWindow(new PredefinedModel(config));
+  await createModelWindow(applicationModels.get(modelName));
 });
 
 ipcMain.on(BE.START.OV.SELECT_IMG, async (event) => {
@@ -87,12 +73,30 @@ ipcMain.on(BE.START.OV.SELECT_IMG, async (event) => {
   event.reply(UI.END.SELECT_IMG, result.canceled ? null : result.filePaths[0]);
 });
 
+type IModelConfigData = { name: string, task: string, files: string };
+ipcMain.on(BE.START.SAVE_MODEL, async (event, modelConfigData: IModelConfigData) => {
+  const applicationModels = await applicationModelsSingleton.get();
+  const model: IModelConfig = {
+    name: modelConfigData.name,
+    task: modelConfigData.task,
+    files: modelConfigData.files.split(','),
+  };
+
+  try {
+    applicationModels.add(model);
+  } catch(e) {
+    console.log(e.message);
+    return;
+  }
+
+  event.reply(UI.END.SAVE_MODEL, applicationModels.models);
+});
+
 type InitModelParams = { modelName: string, device: string };
 ipcMain.on(BE.START.INIT_MODEL, async (event, params: InitModelParams) => {
   console.log(`== INIT_MODEL: ${params.modelName}, device = '${params.device}'`);
   const { modelName, device } = params;
-  const modelConfigs = await getModelsConfig();
-  const config = modelConfigs.find(m => m.name === modelName);
+  const config = (await applicationModelsSingleton.get()).get(modelName);
 
   if (!config) throw new Error(`Model '${modelName}' is not found`);
 
@@ -153,18 +157,9 @@ async function main() {
   await loadWindowURL(mainWindow, 'home');
 
   mainWindow.webContents.setWindowOpenHandler(openLinkInBrowserHandler);
-
-
-  function inferenceCallback(nanosec) {
-    console.log(`=== Inference time: ${formatNanoseconds(nanosec)}ms`)
-  }
-
-  function formatNanoseconds(bigNumber) {
-    return Math.floor(Number(bigNumber) / 1000000);
-  }
 }
 
-async function createModelWindow(modelConfig: PredefinedModel) {
+async function createModelWindow(modelConfig: ModelConfig) {
   mainWindow.hide();
 
   const sampleWindow = createWindow('sampleWindow', {
@@ -208,22 +203,4 @@ function openLinkInBrowserHandler(details: HandlerDetails) {
   shell.openExternal(details.url); // Open URL in user's browser.
 
   return { action: 'deny' } as WindowOpenHandlerResponse; // Prevent the app from opening the URL.
-}
-
-async function sleep(time) {
-  return new Promise((res, rej) => setTimeout(() => {
-    res(true);
-  }, time));
-}
-
-async function getModelsConfig(): Promise<PredefinedModelConfig[]> {
-  const modelsConfigData = await fs.readFile(MODEL_CONFIG_PATH, 'utf-8');
-  const modelsConfig = JSON.parse(modelsConfigData);
-
-  modelsConfig.forEach(c => {
-    if (!PredefinedModel.isValid(c))
-      throw new Error(`Model config is invalid: ${JSON.stringify(c)}`);
-  });
-
-  return modelsConfig;
 }

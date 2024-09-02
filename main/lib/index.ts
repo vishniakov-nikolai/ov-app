@@ -1,9 +1,10 @@
-// import InferenceHandlerSingleton, { InferenceHandler } from './inference-handler';
+import fs from 'node:fs/promises';
 
 import {
-  PredefinedModelConfig,
+  IModelConfig,
   SUPPORTED_TASKS,
   TaskType,
+  MODEL_CONFIG_PATH,
 } from "../../globals/types";
 
 export class LayoutObj {
@@ -30,28 +31,96 @@ export class LayoutObj {
 
 const DEFAULT_OV_MODEL_FILES = ['openvino_model.xml', 'openvino_model.bin'];
 
-export class PredefinedModel {
+export class ModelConfig {
   name: string;
   files: string[];
   task: TaskType;
+  default: boolean;
 
-  constructor(config: PredefinedModelConfig) {
+  constructor(config: IModelConfig) {
+    if (!ModelConfig.isValid(config))
+      throw new Error(`Model config is invalid: ${JSON.stringify(config)}`);
+
     this.name = config.name;
     this.files = config.files || DEFAULT_OV_MODEL_FILES;
     this.task = config.task;
+    this.default = config.default;
+  }
+
+  getConfig() {
+    return {
+      name: this.name,
+      files: this.files,
+      task: this.task,
+      default: this.default,
+    };
   }
 
   static isValid(config: { name?: string, files?: string[], task?: string }) {
-    return typeof config?.name === "string"
+    return typeof config?.name === 'string' && config.name.length > 0
       && SUPPORTED_TASKS.includes(config.task as TaskType)
       && (config.files === undefined || isFilesValid(config.files));
 
     function isFilesValid(files) {
       return Array.isArray(files)
         &&
-        config?.files?.filter(f => typeof f === "string").length
+        config?.files?.filter(f => typeof f === 'string').length
         === config?.files?.length;
     }
+  }
+}
+
+class ApplicationModels {
+  isLoaded: boolean;
+  models: ModelConfig[];
+
+  constructor() {
+    this.isLoaded = false;
+  }
+
+  async load(): Promise<ModelConfig[]> {
+    const modelsConfigData = await fs.readFile(MODEL_CONFIG_PATH, 'utf-8');
+    const modelsConfig = JSON.parse(modelsConfigData);
+
+    this.models = modelsConfig.map(c => new ModelConfig(c));
+    this.isLoaded = true;
+
+    return this.models;
+  }
+
+  async add(config: IModelConfig): Promise<ModelConfig[]> {
+    if (!ModelConfig.isValid(config))
+      throw new Error(`Model config is invalid: ${JSON.stringify(config)}`);
+
+    this.models.push(new ModelConfig(config));
+    await this.save();
+
+    return this.models;
+  }
+
+  private save(): void {
+    const config = this.models.map(m => m.getConfig());
+
+    fs.writeFile(MODEL_CONFIG_PATH, JSON.stringify(config, null, 2), 'utf-8');
+  }
+
+  get(name): ModelConfig {
+    return this.models.find(m => m.name === name) || null;
+  }
+}
+
+export function getApplicationModels() {
+  let instance = null;
+
+  return { get };
+
+  async function get(): Promise<ApplicationModels> {
+    if (!instance) {
+      instance = new ApplicationModels();
+      await instance.load();
+    }
+
+    return instance
   }
 }
 
