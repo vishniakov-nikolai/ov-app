@@ -21,9 +21,7 @@ import { getApplicationModels, ModelConfig } from './lib';
 import { IModelConfig } from '../globals/types';
 
 const isProd = process.env.NODE_ENV === 'production';
-const userDataPath = app.getPath('userData');
-
-const applicationModelsSingleton = getApplicationModels();
+const ApplicationModelsSingleton = getApplicationModels();
 
 let lastInferenceTime: BigInt = 0n;
 
@@ -53,13 +51,13 @@ ipcMain.on(BE.GET.OV.AVAILABLE_DEVICES, async (event) => {
 });
 
 ipcMain.on(BE.START.LOAD_MODELS_LIST, async (event) => {
-  const applicationModels = await applicationModelsSingleton.get();
+  const applicationModels = await ApplicationModelsSingleton.get();
 
   event.reply(UI.END.LOAD_MODELS_LIST, applicationModels.models);
 });
 
 ipcMain.on(BE.OPEN_MODEL, async (event, modelName) => {
-  const applicationModels = await applicationModelsSingleton.get();
+  const applicationModels = await ApplicationModelsSingleton.get();
 
   await createModelWindow(applicationModels.get(modelName));
 });
@@ -75,7 +73,7 @@ ipcMain.on(BE.START.OV.SELECT_IMG, async (event) => {
 
 type IModelConfigData = { name: string, task: string, files: string };
 ipcMain.on(BE.START.SAVE_MODEL, async (event, modelConfigData: IModelConfigData) => {
-  const applicationModels = await applicationModelsSingleton.get();
+  const applicationModels = await ApplicationModelsSingleton.get();
   const model: IModelConfig = {
     name: modelConfigData.name,
     task: modelConfigData.task,
@@ -93,7 +91,7 @@ ipcMain.on(BE.START.SAVE_MODEL, async (event, modelConfigData: IModelConfigData)
 });
 
 ipcMain.on(BE.START.REMOVE_MODEL, async (event, { name }: { name: string }) => {
-  const applicationModels = await applicationModelsSingleton.get();
+  const applicationModels = await ApplicationModelsSingleton.get();
 
   try {
     applicationModels.remove(name);
@@ -111,7 +109,7 @@ type InitModelParams = { modelName: string, device: string };
 ipcMain.on(BE.START.INIT_MODEL, async (event, params: InitModelParams) => {
   console.log(`== INIT_MODEL: ${params.modelName}, device = '${params.device}'`);
   const { modelName, device } = params;
-  const config = (await applicationModelsSingleton.get()).get(modelName);
+  const config = (await ApplicationModelsSingleton.get()).get(modelName);
 
   if (!config) throw new Error(`Model '${modelName}' is not found`);
 
@@ -141,6 +139,7 @@ ipcMain.on(BE.START.OV.INFERENCE, async (event, {
 
   } catch(e) {
     event.reply(UI.EXCEPTION, e.message);
+    console.log(e);
   }
 });
 

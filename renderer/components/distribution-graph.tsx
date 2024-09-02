@@ -42,12 +42,12 @@ export default function DistributionGraph(props: IDistributionGraph) {
         accessibilityLayer
         data={probablities}
         layout="vertical"
-        margin={{ top: 20, left: 10, right: 10 }}
+        margin={{ top: 20, left: 10, right: 25 }}
       >
         <CartesianGrid horizontal={false} />
         <XAxis type="number" dataKey="score"/>
         <YAxis type="category" hide />
-        <Bar dataKey="score" fill="var(--color-desktop)" barSize={20} minPointSize={5}>
+        <Bar dataKey="score" fill="var(--color-desktop)" barSize={20}>
           <LabelList dataKey="score" position="right" fill="black"
             formatter={(value) => round(value, 2)}
           />

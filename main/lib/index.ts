@@ -1,11 +1,15 @@
 import fs from 'node:fs/promises';
+import { join } from 'node:path';
 
 import {
   IModelConfig,
   SUPPORTED_TASKS,
   TaskType,
-  MODEL_CONFIG_PATH,
+  MODEL_CONFIG_NAME,
 } from "../../globals/types";
+import { app } from 'electron';
+
+const userDataPath = app.getPath('userData');
 
 export class LayoutObj {
   layoutStr: string;
@@ -74,12 +78,21 @@ class ApplicationModels {
   isLoaded: boolean;
   models: ModelConfig[];
 
+  private defaultConfigPath = './predefined-models.json';
+  private userConfigPath = join(userDataPath, MODEL_CONFIG_NAME);
+
   constructor() {
     this.isLoaded = false;
   }
 
   async load(): Promise<ModelConfig[]> {
-    const modelsConfigData = await fs.readFile(MODEL_CONFIG_PATH, 'utf-8');
+    try {
+      await fs.access(this.userConfigPath, fs.constants.F_OK);
+    } catch(e) {
+      await fs.copyFile(this.defaultConfigPath, this.userConfigPath);
+    }
+
+    const modelsConfigData = await fs.readFile(this.userConfigPath, 'utf-8');
     const modelsConfig = JSON.parse(modelsConfigData);
 
     this.models = modelsConfig.map(c => new ModelConfig(c));
@@ -98,10 +111,10 @@ class ApplicationModels {
     return this.models;
   }
 
-  private save(): void {
+  private async save(): Promise<void> {
     const config = this.models.map(m => m.getConfig());
 
-    fs.writeFile(MODEL_CONFIG_PATH, JSON.stringify(config, null, 2), 'utf-8');
+    await fs.writeFile(this.userConfigPath, JSON.stringify(config, null, 2), 'utf-8');
   }
 
   get(name: string): ModelConfig {

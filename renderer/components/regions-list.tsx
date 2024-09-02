@@ -13,7 +13,7 @@ export default function RegionsList(props: RegionsListProps) {
     const elementUnderCursor = document.elementFromPoint(event.clientX, event.clientY);
 
     if (listRef.current && listRef.current.contains(elementUnderCursor)) {
-      elementUnderCursor.classList.add('text-red-600');
+      // elementUnderCursor.classList.add('text-red-600');
       if (elementUnderCursor instanceof HTMLElement)
         setCurrentClass(elementUnderCursor.dataset.name);
     }
@@ -21,14 +21,13 @@ export default function RegionsList(props: RegionsListProps) {
   const handleMouseLeave = () => {
     const items = listRef.current.querySelectorAll('li');
     items.forEach(item => {
-      item.classList.remove('text-red-600');
       setCurrentClass(null);
     });
   };
 
   return <ul ref={listRef} className="p-2 flex flex-wrap gap-4 justify-center">
     { names.map((className, idx) =>
-      <li key={idx} className="cursor-pointer flex items-center"
+      <li key={idx} className="cursor-pointer flex items-center hover:text-primary"
         data-name={className}
         onMouseMove={handleMouseMove}
         onMouseLeave={handleMouseLeave}

@@ -35,4 +35,4 @@ export interface IDetectionResult {
   score: number | null;
 }
 
-export const MODEL_CONFIG_PATH = './models.json';
+export const MODEL_CONFIG_NAME = './models.json';

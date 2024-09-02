@@ -1,6 +1,12 @@
+import { join } from 'node:path';
+import { app } from 'electron';
 import { env, pipeline } from 'transformers.js';
+
 import { IModelConfig } from '../../globals/types';
 import { ModelConfig } from '.';
+
+const userDataPath = app.getPath('userData');
+const CACHE_DIR = join(userDataPath, 'models');
 
 const InferenceHandlerSingleton = (function() {
   let instance;
@@ -25,6 +31,8 @@ const InferenceHandlerSingleton = (function() {
       _device = device;
       _files = modelConfig.files;
 
+      env.cacheDir = CACHE_DIR;
+      console.log(`Model cache dir set as '${CACHE_DIR}'`);
       console.log(`Initializing new pipeline: task = ${_task}, model = ${_modelName}, device = ${device}`)
       instance = await pipeline(
         _task,
