@@ -59,12 +59,12 @@ export default function HomePage() {
         </div>
       }
       <div className="flex flex-col flex-nowrap h-full">
-        <nav className="flex justify-center p-4 border-b">
+        <nav className="flex p-4 border-b items-center shadow-sm">
           <img
-            className="w-[360px]"
+            className="w-[145px] mt-[2px]"
             src="/svg/ov-logo.svg" alt="OpenVINO logo" />
-          <p className="text-6xl ml-3">App</p>
-          <p className="text-6xl ml-3">/ Models List</p>
+          <p className="text-3xl ml-2 font-medium pr-4">App</p>
+          <p className="text-2xl pl-4 border-l">Models List</p>
         </nav>
         <ModelsList
           models={modelsList}
