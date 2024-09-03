@@ -9,6 +9,7 @@ const actions = {
     },
     START: {
       INFERENCE: 'ui.start.runInference',
+      NEW_CHUNK: 'ui.start.newChunk',
     },
     END: {
       LOAD_MODELS_LIST: 'ui.end.loadModelsList',

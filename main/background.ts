@@ -1,5 +1,4 @@
 import path from 'path';
-import fs from 'node:fs/promises';
 import {
   app,
   net,
@@ -103,8 +102,6 @@ ipcMain.on(BE.START.REMOVE_MODEL, async (event, { name }: { name: string }) => {
   event.reply(UI.END.SAVE_MODEL, applicationModels.models);
 });
 
-
-
 type InitModelParams = { modelName: string, device: string };
 ipcMain.on(BE.START.INIT_MODEL, async (event, params: InitModelParams) => {
   console.log(`== INIT_MODEL: ${params.modelName}, device = '${params.device}'`);
@@ -121,22 +118,30 @@ ipcMain.on(BE.START.INIT_MODEL, async (event, params: InitModelParams) => {
   event.reply(UI.END.INIT_MODEL, []);
 });
 
-ipcMain.on(BE.START.OV.INFERENCE, async (event, {
-  modelLabel,
-  imgPath,
-  device,
-}) => {
+ipcMain.on(BE.START.OV.INFERENCE, async (event, { value, config }) => {
   event.reply(UI.START.INFERENCE);
-  console.log(`== ${UI.START.INFERENCE}`, imgPath);
+  console.log(`== ${UI.START.INFERENCE}`, value);
 
   const generator = InferenceHandlerSingleton.get();
+  const generationConfig = typeof value === 'string'
+    ? {
+        ...config,
+        'callback_function': x => {
+          const txt = generator.tokenizer.decode(x[0]['output_token_ids']);
+
+          console.log(txt);
+
+          event.reply(UI.START.NEW_CHUNK, txt);
+        }
+      }
+    : config;
 
   try {
     console.log('== start inference');
-    const output = await generator(imgPath, { topk: 5 });
+    const output = await generator(value, generationConfig);
+    console.log(config);
     console.log('== end inference');
     event.reply(UI.END.INFERENCE, { data: output, elapsedTime: lastInferenceTime });
-
   } catch(e) {
     event.reply(UI.EXCEPTION, e.message);
     console.log(e);

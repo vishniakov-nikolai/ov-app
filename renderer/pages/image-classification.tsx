@@ -81,8 +81,8 @@ export default function ImageClassificationPage() {
     setInferenceTime(null);
 
     window.ipc.send(BE.START.OV.INFERENCE, {
-      imgPath,
-      device: selectedDevice
+      value: imgPath,
+      config: { topk: 5 },
     });
   }
 
@@ -162,13 +162,3 @@ export default function ImageClassificationPage() {
   )
 }
 
-function preprocessDict(dictionary: { [classId: number]: [string, string] }) {
-  const size = Object.keys(dictionary).length;
-
-  return Array.from({ length: size }, (_, idx) => {
-    const value = dictionary[idx];
-
-    return typeof value === 'string' ? value
-      : value[1] || value[0];
-  });
-}

@@ -88,8 +88,7 @@ export default function ImageSegmentationPage() {
     setInferenceTime(null);
 
     window.ipc.send(BE.START.OV.INFERENCE, {
-      imgPath,
-      device: selectedDevice
+      value: imgPath,
     });
   }
 
