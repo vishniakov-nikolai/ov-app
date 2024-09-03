@@ -8,7 +8,7 @@
  * @module utils/image
  */
 const BROWSER_ENV = true;
-const WEBWORKER_ENV = BROWSER_ENV && constructor.name === 'DedicatedWorkerGlobalScope';
+const WEBWORKER_ENV = false;
 
 let createCanvasFunction;
 let ImageDataClass;
