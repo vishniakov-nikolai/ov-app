@@ -6,7 +6,6 @@ import { useSearchParams } from 'next/navigation'
 import Footer from '../components/footer';
 import { Button } from '../components/ui/button';
 import DeviceSelector from '../components/device-selector';
-import InferenceTime from '../components/inference-time';
 import { BE, UI } from '../../constants';
 import { Label } from '../components/ui/label';
 import { Input } from '../components/ui/input';
@@ -19,15 +18,15 @@ export default function ImageClassificationPage() {
   const [isModelDownloading, setIsModelDownloading] = useState(false);
   const [input, setInput] = useState('');
   const [isInferenceRunning, setIsInferenceRunning] = useState(false);
-  const [inferenceTime, setInferenceTime] = useState(null);
   const [selectedDevice, setSelectedDevice] = useState(DEFAULT_DEVICE);
+  const [originalPromt, setOriginalPromt] = useState(null);
 
-  const [temperature, setTemperature] = useState('');
+  const [temperature, setTemperature] = useState('1');
   const [maxNewTokens, setMaxNewTokens] = useState('');
-  const [repetitionPenalty, setRepetitionPenalty] = useState('');
-  const [noRepeatNgramSize, setNoRepeatNgramSize] = useState('');
-  const [numBeams, setNumBeams] = useState('');
-  const [numReturnSequences, setNumReturnSequences] = useState('');
+  const [repetitionPenalty, setRepetitionPenalty] = useState('1');
+  const [noRepeatNgramSize, setNoRepeatNgramSize] = useState('0');
+  const [numBeams, setNumBeams] = useState('1');
+  const [numReturnSequences, setNumReturnSequences] = useState('1');
 
   useEffect(() => {
     setIsModelDownloading(true);
@@ -62,13 +61,12 @@ export default function ImageClassificationPage() {
       }) => {
         console.log(inferenceResult);
 
-      setIsInferenceRunning(false);
-      setInferenceTime(inferenceResult.elapsedTime);
+        setIsInferenceRunning(false);
+        setInput(extractText(inferenceResult.data));
 
-      setInput(extractText(inferenceResult.data));
-
-      console.log('=== Inference done');
-    });
+        console.log('=== Inference done');
+      }
+    );
   }, []);
   useEffect(() => {
     return window.ipc.on(UI.EXCEPTION, (errorMessage) => {
@@ -78,37 +76,37 @@ export default function ImageClassificationPage() {
   }, []);
   useEffect(() => {
     setInput('');
-    setInferenceTime(null);
   }, [selectedDevice]);
 
   function initiateInference(text) {
-    setInferenceTime(null);
-
     const config: {
-      'temperature'?: number,
-      'max_new_tokens'?: number,
-      'repetition_penalty'?: number,
-      'no_repeat_ngram_size'?: number,
-      'num_beams'?: number,
-      'num_return_sequences'?: number,
-    } = {};
+      'temperature': string,
+      'max_new_tokens': string,
+      'repetition_penalty': string,
+      'no_repeat_ngram_size': string,
+      'num_beams': string,
+      'num_return_sequences': string,
+    } = {
+      'temperature': temperature,
+      'max_new_tokens': maxNewTokens,
+      'repetition_penalty': repetitionPenalty,
+      'no_repeat_ngram_size': noRepeatNgramSize,
+      'num_beams': numBeams,
+      'num_return_sequences': numReturnSequences,
+    };
+    const filteredConfig = Object.keys(config).reduce((acc, key) => {
+      const value = config[key];
 
-    if (temperature !== '' && !isNaN(Number(temperature)))
-      config.temperature = Number(temperature);
-    if (maxNewTokens !== '' && !isNaN(Number(maxNewTokens)))
-      config.max_new_tokens = Number(maxNewTokens);
-    if (repetitionPenalty !== '' && !isNaN(Number(repetitionPenalty)))
-      config.repetition_penalty = Number(repetitionPenalty);
-    if (noRepeatNgramSize !== '' && !isNaN(Number(noRepeatNgramSize)))
-      config.no_repeat_ngram_size = Number(noRepeatNgramSize);
-    if (numBeams !== '' && !isNaN(Number(numBeams)))
-      config.num_beams = Number(numBeams);
-    if (numReturnSequences !== '' && !isNaN(Number(numReturnSequences)))
-      config.num_return_sequences = Number(numReturnSequences);
+      if (value !== '' && !isNaN(Number(value))) acc[key] = Number(value);
+
+      return acc;
+    }, {});
+
+    setOriginalPromt(text);
 
     window.ipc.send(BE.START.OV.INFERENCE, {
       value: text,
-      config,
+      config: filteredConfig,
     });
   }
 
@@ -149,11 +147,12 @@ export default function ImageClassificationPage() {
               >Generate</Button>
             </div>
           </fieldset>
-          <div className="border border-gray flex min-h-80">
+          <div className="flex min-h-80">
             <textarea
-              className="w-1/2 p-4 resize-none"
+              className="border border-gray w-1/2 p-4 resize-none"
               onChange={(e) => setInput(e.target.value)}
               value={input}
+              placeholder="Put your promt here..."
             ></textarea>
             <div className="w-1/2 grid gap-2 items-start p-4">
               <div className="grid grid-cols-3 items-center gap-4">
@@ -172,6 +171,7 @@ export default function ImageClassificationPage() {
                   id="maxNewTokens"
                   className="col-span-2 h-8"
                   value={maxNewTokens}
+                  placeholder="null"
                   onChange={(e) => setMaxNewTokens(e.target.value)}
                   type="number"
                 />
@@ -183,6 +183,7 @@ export default function ImageClassificationPage() {
                   className="col-span-2 h-8"
                   value={repetitionPenalty}
                   min={1}
+                  step={0.1}
                   onChange={(e) => setRepetitionPenalty(e.target.value)}
                   type="number"
                 />
@@ -193,7 +194,8 @@ export default function ImageClassificationPage() {
                   id="noRepeatNgramSize"
                   className="col-span-2 h-8"
                   value={noRepeatNgramSize}
-                  min={1}
+                  min={0}
+                  step={1}
                   onChange={(e) => setNoRepeatNgramSize(e.target.value)}
                   type="number"
                 />
@@ -205,6 +207,7 @@ export default function ImageClassificationPage() {
                   className="col-span-2 h-8"
                   value={numBeams}
                   min={1}
+                  step={0.1}
                   onChange={(e) => setNumBeams(e.target.value)}
                   type="number"
                 />
@@ -216,16 +219,24 @@ export default function ImageClassificationPage() {
                   className="col-span-2 h-8"
                   value={numReturnSequences}
                   min={1}
+                  step={0.1}
                   onChange={(e) => setNumReturnSequences(e.target.value)}
                   type="number"
                 />
               </div>
             </div>
           </div>
-          {
-            inferenceTime &&
-            <InferenceTime value={inferenceTime} />
-          }
+          { originalPromt && <>
+              <h3 className="font-medium pt-4">
+                Original Promt (
+                  <span
+                    className="text-primary cursor-pointer hover:text-primary/90"
+                    onClick={() => setInput(originalPromt)}>
+                    Set as Input
+                  </span>):
+              </h3>
+              <div className="py-2 whitespace-pre">{originalPromt}</div>
+            </> }
         </div>
         <Footer className="mt-auto" />
       </div>
@@ -234,8 +245,8 @@ export default function ImageClassificationPage() {
   )
 }
 
-function extractText(arr?: { 'generated_text': string }[]): string {
+function extractText(arr?: { 'generated_text': string }[], idx = 0): string {
   if (!arr) return '';
 
-  return arr.map((el) => el['generated_text']).join('\n');
+  return arr[idx]['generated_text'];
 }
