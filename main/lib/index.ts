@@ -7,7 +7,7 @@ import {
   TaskType,
   MODEL_CONFIG_NAME,
 } from "../../globals/types";
-import { app } from 'electron';
+import { app, net } from 'electron';
 
 const userDataPath = app.getPath('userData');
 
@@ -150,3 +150,41 @@ type InferenceHandler = Object;
 export { InferenceHandlerSingleton };
 export type { InferenceHandler };
 
+export async function checkRemoteFile(modelName, filename) {
+  const revision = 'main';
+  const remoteHost = 'https://huggingface.co/';
+  const remotePathTemplate = '{model}/resolve/{revision}/';
+  const url = pathJoin(
+    remoteHost,
+    remotePathTemplate
+      .replaceAll('{model}', modelName)
+      .replaceAll('{revision}', encodeURIComponent(revision)),
+    filename,
+  );
+  const response = await net.fetch(url, { method: 'HEAD' });
+
+  return {
+    ok: response.ok,
+    url,
+  };
+}
+
+/**
+ * Joins multiple parts of a path into a single path, while handling leading and trailing slashes.
+ *
+ * @param {...string} parts Multiple parts of a path.
+ * @returns {string} A string representing the joined path.
+ */
+function pathJoin(...parts) {
+  // https://stackoverflow.com/a/55142565
+  parts = parts.map((part, index) => {
+      if (index) {
+          part = part.replace(new RegExp('^/'), '');
+      }
+      if (index !== parts.length - 1) {
+          part = part.replace(new RegExp('/$'), '');
+      }
+      return part;
+  })
+  return parts.join('/');
+}

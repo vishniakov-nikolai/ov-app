@@ -37,7 +37,7 @@ export function DetectionsList(props: DetectionListProps) {
       />
     </div>
     <h3>Predictions</h3>
-    <div className="grow max-h-full overflow-auto relative border">
+    <div className="grow max-h-full overflow-auto relative border border-black">
       <ul ref={listRef} className="absolute w-full h-full overflow-auto">
         {
           (filtered || []).sort((i, j) => i.score > j.score ? -1 : 1).map((i, idx) => {

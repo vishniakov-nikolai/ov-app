@@ -140,7 +140,7 @@ export default function ImageSegmentationPage() {
                 <img ref={inputImgRef} src={selectedImg} alt="User img" className="absolute inset-0 w-full h-full object-contain p-2" />
               }
             </div>
-            <div className="w-1/2 flex items-center justify-center relative p-4 bg-gray-200">
+            <div className="w-1/2 flex items-center justify-center relative p-4">
               { detectionResult
                 ? <div className="w-full h-full">
                   <DetectionCanvas

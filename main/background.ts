@@ -16,7 +16,7 @@ import { addon as ov } from 'openvino-node';
 import { createWindow } from './helpers';
 import { BE, UI } from '../constants';
 import InferenceHandlerSingleton from './lib/inference-handler';
-import { getApplicationModels, ModelConfig } from './lib';
+import { checkRemoteFile, getApplicationModels, ModelConfig } from './lib';
 import { IModelConfig } from '../globals/types';
 
 const isProd = process.env.NODE_ENV === 'production';
@@ -70,13 +70,33 @@ ipcMain.on(BE.START.OV.SELECT_IMG, async (event) => {
   event.reply(UI.END.SELECT_IMG, result.canceled ? null : result.filePaths[0]);
 });
 
-type IModelConfigData = { name: string, task: string, files: string };
+type IModelConfigData = {
+  modelName: string,
+  task: string,
+  files: string[],
+};
 ipcMain.on(BE.START.SAVE_MODEL, async (event, modelConfigData: IModelConfigData) => {
+  const { modelName, task, files } = modelConfigData;
+  console.log(`== CHECK_MODEL_EXISTENCE: ${modelName}, files = '${files.join(', ')}'`);
+  let status = null;
+
+  for (const f of files) {
+    status = await checkRemoteFile(modelName, f);
+
+    if (!status.ok) break;
+  }
+
+  if (!status.ok)
+    return event.reply(UI.END.SAVE_MODEL, {
+      ok: false,
+      message: `File by url: '${status.url}' doesn't exist`,
+    });
+
   const applicationModels = await ApplicationModelsSingleton.get();
   const model: IModelConfig = {
-    name: modelConfigData.name,
-    task: modelConfigData.task,
-    files: modelConfigData.files.split(','),
+    name: modelName,
+    task: task,
+    files: files,
   };
 
   try {
@@ -86,7 +106,7 @@ ipcMain.on(BE.START.SAVE_MODEL, async (event, modelConfigData: IModelConfigData)
     return;
   }
 
-  event.reply(UI.END.SAVE_MODEL, applicationModels.models);
+  event.reply(UI.END.SAVE_MODEL, { ok: true });
 });
 
 ipcMain.on(BE.START.REMOVE_MODEL, async (event, { name }: { name: string }) => {
@@ -99,7 +119,7 @@ ipcMain.on(BE.START.REMOVE_MODEL, async (event, { name }: { name: string }) => {
     return;
   }
 
-  event.reply(UI.END.SAVE_MODEL, applicationModels.models);
+  event.reply(UI.END.REMOVE_MODEL, applicationModels.models);
 });
 
 type InitModelParams = { modelName: string, device: string };

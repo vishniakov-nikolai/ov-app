@@ -149,7 +149,7 @@ export default function ImageClassificationPage() {
           </fieldset>
           <div className="flex min-h-80">
             <textarea
-              className="border border-gray w-1/2 p-4 resize-none"
+              className="border border-black w-1/2 p-4 resize-none"
               onChange={(e) => setInput(e.target.value)}
               value={input}
               placeholder="Put your promt here..."
@@ -235,7 +235,7 @@ export default function ImageClassificationPage() {
                     Set as Input
                   </span>):
               </h3>
-              <div className="py-2 whitespace-pre">{originalPromt}</div>
+              <div className="py-2 whitespace-pre-line">{originalPromt}</div>
             </> }
         </div>
         <Footer className="mt-auto" />

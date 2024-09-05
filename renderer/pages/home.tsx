@@ -28,16 +28,6 @@ export default function HomePage() {
   }, []);
   useEffect(() => {
     return window.ipc.on(
-      UI.END.SAVE_MODEL,
-      (models: IModelConfig[]) => {
-        setModelsList(models);
-        setIsLoading(false);
-        console.log(models);
-      },
-    );
-  }, []);
-  useEffect(() => {
-    return window.ipc.on(
       UI.END.REMOVE_MODEL,
       (models: IModelConfig[]) => {
         setModelsList(models);
@@ -69,19 +59,12 @@ export default function HomePage() {
         <ModelsList
           models={modelsList}
           onSelect={(modelName) => window.ipc.send(BE.OPEN_MODEL, modelName)}
-          onAdd={addModel}
           onRemove={removeModel}
         />
         <Footer className="mt-auto border-t" />
       </div>
     </React.Fragment>
   );
-
-  function addModel(name: string, task: string, files: string) {
-    setIsLoading(true);
-
-    window.ipc.send(BE.START.SAVE_MODEL, { name, task, files });
-  }
 
   function removeModel(name: string) {
     setIsLoading(true);
