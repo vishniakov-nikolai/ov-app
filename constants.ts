@@ -10,6 +10,7 @@ const actions = {
     START: {
       INFERENCE: 'ui.start.runInference',
       NEW_CHUNK: 'ui.start.newChunk',
+      INIT_MODEL: 'ui.start.initModel',
     },
     END: {
       LOAD_MODELS_LIST: 'ui.end.loadModelsList',
@@ -20,6 +21,7 @@ const actions = {
       REMOVE_MODEL: 'ui.end.removeModel',
     },
     EXCEPTION: 'ui.exception',
+    PROGRESS_UPDATE: 'ui.progressUpdate',
   },
   BE: {
     OPEN_MODEL: 'be.openModel',

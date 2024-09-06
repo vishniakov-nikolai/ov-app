@@ -124,6 +124,8 @@ ipcMain.on(BE.START.REMOVE_MODEL, async (event, { name }: { name: string }) => {
 
 type InitModelParams = { modelName: string, device: string };
 ipcMain.on(BE.START.INIT_MODEL, async (event, params: InitModelParams) => {
+  event.reply(UI.START.INIT_MODEL);
+
   console.log(`== INIT_MODEL: ${params.modelName}, device = '${params.device}'`);
   const { modelName, device } = params;
   const config = (await ApplicationModelsSingleton.get()).get(modelName);
@@ -132,7 +134,11 @@ ipcMain.on(BE.START.INIT_MODEL, async (event, params: InitModelParams) => {
 
   console.log('== start init');
   await InferenceHandlerSingleton.init(config, device,
-    (nanosec) => { lastInferenceTime = nanosec; });
+    (nanosec) => { lastInferenceTime = nanosec; },
+    (progressInfo) => {
+      event.reply(UI.PROGRESS_UPDATE, progressInfo);
+    },
+  );
   console.log('== end init');
 
   event.reply(UI.END.INIT_MODEL, []);
@@ -148,8 +154,6 @@ ipcMain.on(BE.START.OV.INFERENCE, async (event, { value, config }) => {
         ...config,
         'callback_function': x => {
           const txt = generator.tokenizer.decode(x[0]['output_token_ids']);
-
-          console.log(txt);
 
           event.reply(UI.START.NEW_CHUNK, txt);
         }

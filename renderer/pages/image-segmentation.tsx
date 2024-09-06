@@ -20,7 +20,6 @@ export default function ImageSegmentationPage() {
 
   const inputImgRef = useRef();
 
-  const [isModelDownloading, setIsModelDownloading] = useState(false);
   const [selectedImg, setSelectedImg] = useState(null);
   const [isInferenceRunning, setIsInferenceRunning] = useState(false);
   const [inferenceTime, setInferenceTime] = useState(null);
@@ -29,18 +28,10 @@ export default function ImageSegmentationPage() {
   const [hoveredRegion, setHoveredRegion] = useState<string>(null);
 
   useEffect(() => {
-    setIsModelDownloading(true);
-
     if (!modelName || !selectedDevice) return;
 
     window.ipc.send(BE.START.INIT_MODEL, { modelName, device: selectedDevice });
   }, [modelName, selectedDevice]);
-  useEffect(() => {
-    return window.ipc.on(UI.END.INIT_MODEL, (paths) => {
-      console.log(paths);
-      setIsModelDownloading(false);
-    });
-  }, []);
 
   useEffect(() => {
     return window.ipc.on(UI.END.SELECT_IMG, (imgPath) => {
@@ -94,13 +85,6 @@ export default function ImageSegmentationPage() {
       <Head>
         <title>{ `OpenVINO App | Image Sermentation | ${modelName}` }</title>
       </Head>
-      {
-        isModelDownloading &&
-        <div className="banner text-white">
-          <UpdateIcon className="mr-2 h-4 w-4 animate-spin" />
-          Model Downloading...
-        </div>
-      }
       <div className="content w-auto">
         <div className="p-5">
           <h1 className="text-4xl mb-8">{modelName}</h1>

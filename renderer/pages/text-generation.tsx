@@ -29,18 +29,10 @@ export default function ImageClassificationPage() {
   const [numReturnSequences, setNumReturnSequences] = useState('1');
 
   useEffect(() => {
-    setIsModelDownloading(true);
-
     if (!modelName || !selectedDevice) return;
 
     window.ipc.send(BE.START.INIT_MODEL, { modelName, device: selectedDevice });
   }, [modelName, selectedDevice]);
-  useEffect(() => {
-    return window.ipc.on(UI.END.INIT_MODEL, (paths) => {
-      console.log(paths);
-      setIsModelDownloading(false);
-    });
-  }, []);
 
   useEffect(() => {
     return window.ipc.on(UI.START.INFERENCE, () => {
@@ -115,13 +107,6 @@ export default function ImageClassificationPage() {
       <Head>
         <title>{`OpenVINO App | Text Generation | ${modelName}`}</title>
       </Head>
-      {
-        isModelDownloading &&
-        <div className="banner text-white">
-          <UpdateIcon className="mr-2 h-4 w-4 animate-spin" />
-          Model Downloading...
-        </div>
-      }
       <div className="content w-auto">
         <div className="p-5">
           <h1 className="text-4xl mb-8">{modelName}</h1>

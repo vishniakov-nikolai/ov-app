@@ -16,7 +16,12 @@ const InferenceHandlerSingleton = (function() {
   let _device: string = "AUTO";
   let _files: string[] = null;
 
-  async function init(config: IModelConfig, device = 'AUTO', inferenceCallback) {
+  async function init(
+    config: IModelConfig,
+    device = 'AUTO',
+    inferenceCallback,
+    progressCallback,
+  ) {
     const modelConfig = new ModelConfig(config);
 
     if (instance && (_task !== modelConfig.task || _modelName !== modelConfig.name || _device !== device))
@@ -39,6 +44,9 @@ const InferenceHandlerSingleton = (function() {
         _modelName,
         {
           'progress_callback': ({ status, name, file, progress, loaded, total }) => {
+            if (typeof progressCallback === 'function')
+              progressCallback({ status, name, file, progress, loaded, total });
+
             if (!progress) return;
 
             // process.stdout.clearLine();

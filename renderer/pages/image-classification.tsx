@@ -15,7 +15,6 @@ const DEFAULT_DEVICE = 'AUTO';
 export default function ImageClassificationPage() {
   const searchParams = useSearchParams()
   const modelName = searchParams.get('model');
-  const [isModelDownloading, setIsModelDownloading] = useState(false);
   const [selectedImg, setSelectedImg] = useState(null);
   const [resultData, setResultData] = useState([]);
   const [isInferenceRunning, setIsInferenceRunning] = useState(false);
@@ -23,18 +22,10 @@ export default function ImageClassificationPage() {
   const [selectedDevice, setSelectedDevice] = useState(DEFAULT_DEVICE);
 
   useEffect(() => {
-    setIsModelDownloading(true);
-
     if (!modelName || !selectedDevice) return;
 
     window.ipc.send(BE.START.INIT_MODEL, { modelName, device: selectedDevice });
   }, [modelName, selectedDevice]);
-  useEffect(() => {
-    return window.ipc.on(UI.END.INIT_MODEL, (paths) => {
-      console.log(paths);
-      setIsModelDownloading(false);
-    });
-  }, []);
 
   useEffect(() => {
     return window.ipc.on(UI.END.SELECT_IMG, (imgPath) => {
@@ -91,13 +82,6 @@ export default function ImageClassificationPage() {
       <Head>
         <title>OpenVINO App | Image Classification | {modelName}</title>
       </Head>
-      {
-        isModelDownloading &&
-        <div className="banner text-white">
-          <UpdateIcon className="mr-2 h-4 w-4 animate-spin" />
-          Model Downloading...
-        </div>
-      }
       <div className="content w-auto">
         <div className="p-5">
           <h1 className="text-4xl mb-8">{modelName}</h1>
