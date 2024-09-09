@@ -77,7 +77,16 @@ type IModelConfigData = {
   files: string[],
 };
 ipcMain.on(BE.START.SAVE_MODEL, async (event, modelConfigData: IModelConfigData) => {
+  const applicationModels = await ApplicationModelsSingleton.get();
   const { modelName, task, files } = modelConfigData;
+  const isExists = !!applicationModels.get(modelName);
+
+  if (isExists)
+    return event.reply(UI.END.SAVE_MODEL, {
+      ok: false,
+      message: `Model with name: '${modelName}' is already exists`,
+    });
+
   console.log(`== CHECK_MODEL_EXISTENCE: ${modelName}, files = '${files.join(', ')}'`);
   let status = null;
 
@@ -93,7 +102,6 @@ ipcMain.on(BE.START.SAVE_MODEL, async (event, modelConfigData: IModelConfigData)
       message: `File by url: '${status.url}' doesn't exist`,
     });
 
-  const applicationModels = await ApplicationModelsSingleton.get();
   const model: IModelConfig = {
     name: modelName,
     task: task,
@@ -143,6 +151,7 @@ ipcMain.on(BE.START.INIT_MODEL, async (event, params: InitModelParams) => {
       },
     );
   } catch(e) {
+    console.log(e);
     event.reply(UI.EXCEPTION, e.message);
     sampleWindow?.close();
   }

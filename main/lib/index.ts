@@ -105,6 +105,9 @@ class ApplicationModels {
     if (!ModelConfig.isValid(config))
       throw new Error(`Model config is invalid: ${JSON.stringify(config)}`);
 
+    if (this.models.find(m => m.name === config.name))
+      throw new Error(`Model with name: '${config.name}' already exists!`);
+
     this.models.push(new ModelConfig(config));
     await this.save();
 
@@ -122,7 +125,7 @@ class ApplicationModels {
   }
 
   async remove(name: string) {
-    this.models = this.models.filter(m => m.name !== name);
+    this.models = this.models.filter(m => m.name !== name && !m.default);
     await this.save();
 
     return await this.load();

@@ -40,7 +40,7 @@ export default function ModelsList({ models, onSelect, onRemove }: ModelListProp
   const categories = Object.keys(groupped);
 
   return (<div className="grow overflow-auto">
-    { !categories.length && 'Models List is empty' }
+    { !categories.length && <div className="w-full text-center p-10">Models List is empty</div> }
     { categories.map((category, idx) =>
       <div key={idx}>
         <h2 className='p-4 pb-0 font-medium flex items-center'>{categoriesMap[category] || category}</h2>

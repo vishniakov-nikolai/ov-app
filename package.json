@@ -34,7 +34,7 @@
     "recharts": "^2.12.7",
     "tailwind-merge": "^2.4.0",
     "tailwindcss-animate": "^1.0.7",
-    "transformers.js": "vishniakov-nikolai/transformers.js#feature/openvino",
+    "transformers.js": "vishniakov-nikolai/transformers.js#9c39bfaa2a57c9ef7aea0190ac292d8b08c690a8",
     "zod": "^3.23.8"
   },
   "devDependencies": {
