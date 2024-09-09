@@ -75,13 +75,16 @@ export function AddModelCard({ task }: AddModelCardProps) {
 
   return <Dialog open={open} onOpenChange={setOpen}>
     <DialogTrigger asChild>
-      <div className="cursor-pointer border border-dashed p-4 hover:border-primary flex items-center text-gray-400 hover:text-primary">
-        <div className="w-full text-center text-xl">+</div>
+      <div className="transition-all cursor-pointer border border-dashed p-4 hover:border-primary flex items-center text-gray-400 hover:text-primary justify-center">
+        <div>
+          <div className="w-full text-center text-xl">+</div>
+          <div>Add New Model</div>
+        </div>
       </div>
     </DialogTrigger>
     <DialogContent className="sm:max-w-md">
       <DialogHeader>
-        <DialogTitle className="font-normal text-xl">Add Model</DialogTitle>
+        <DialogTitle className="font-medium text-xl">Add Model</DialogTitle>
       </DialogHeader>
       <Form {...form}>
         <form onSubmit={(e) => {

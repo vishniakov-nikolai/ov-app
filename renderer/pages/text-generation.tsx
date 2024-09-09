@@ -9,6 +9,7 @@ import DeviceSelector from '../components/device-selector';
 import { BE, UI } from '../../constants';
 import { Label } from '../components/ui/label';
 import { Input } from '../components/ui/input';
+import { Header } from '../components/header';
 
 const DEFAULT_DEVICE = 'AUTO';
 
@@ -108,16 +109,16 @@ export default function ImageClassificationPage() {
         <title>{`OpenVINO App | Text Generation | ${modelName}`}</title>
       </Head>
       <div className="content w-auto">
-        <div className="p-5">
-          <h1 className="text-4xl mb-8">{modelName}</h1>
+        <Header section="Text Generation Sample" />
+        <div className="flex flex-col grow p-4 pt-2">
           <fieldset disabled={isInferenceRunning}>
             <ul className="leading-10 mb-3">
-              <li className="flex mb-3">
-                <span className="mr-2 w-[80px]">Task:</span>
-                Image Classification
+              <li className="flex mb-2">
+                <span className="mr-2 w-[60px]">Model:</span>
+                {modelName}
               </li>
               <li className="flex mb-3">
-                <span className="mr-2 w-[80px]">Device:</span>
+                <span className="mr-2 w-[60px]">Device:</span>
                 <DeviceSelector
                   setSelectedDevice={setSelectedDevice}
                 />

@@ -25,7 +25,7 @@ export default function RegionsList(props: RegionsListProps) {
     });
   };
 
-  return <ul ref={listRef} className="p-2 flex flex-wrap gap-4 justify-center">
+  return <ul ref={listRef} className="pt-4 flex flex-wrap gap-4 justify-center">
     { names.map((className, idx) =>
       <li key={idx} className="cursor-pointer flex items-center hover:text-primary"
         data-name={className}

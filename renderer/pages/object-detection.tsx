@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import Head from 'next/head';
-import { UpdateIcon } from '@radix-ui/react-icons';
+import { ImageIcon, UpdateIcon } from '@radix-ui/react-icons';
 import { useSearchParams } from 'next/navigation'
 
 import Footer from '../components/footer';
@@ -11,6 +11,7 @@ import { BE, UI } from '../../constants';
 import { IDetectionResult } from '../../globals/types';
 import { DetectionCanvas } from '../components/detection-canvas';
 import { DetectionsList } from '../components/detections-list';
+import { Header } from '../components/header';
 
 const DEFAULT_DEVICE = 'AUTO';
 const TASK_NAME = 'Object Detection';
@@ -89,16 +90,16 @@ export default function ImageSegmentationPage() {
         <title>{ `OpenVINO App | ${TASK_NAME} | ${modelName}` }</title>
       </Head>
       <div className="content w-auto">
-        <div className="flex flex-col p-5 grow">
-          <h1 className="text-4xl mb-8">{modelName}</h1>
+        <Header section="Object Detection Sample" />
+        <div className="flex flex-col grow p-4 pt-2">
           <fieldset disabled={isInferenceRunning}>
             <ul className="leading-10 mb-3">
-            <li className="flex mb-3">
-                <span className="mr-2 w-[80px]">Task:</span>
-                { TASK_NAME }
+              <li className="flex mb-2">
+                <span className="mr-2 w-[60px]">Model:</span>
+                {modelName}
               </li>
               <li className="flex mb-3">
-                <span className="mr-2 w-[80px]">Device:</span>
+                <span className="mr-2 w-[60px]">Device:</span>
                 <DeviceSelector
                   setSelectedDevice={setSelectedDevice}
                 />
@@ -137,7 +138,10 @@ export default function ImageSegmentationPage() {
                     {
                       isInferenceRunning
                         ? <UpdateIcon className="mr-2 h-4 w-4 animate-spin" />
-                        : 'Result Image'
+                        : <span className="text-center text-xl flex flex-col items-center text-gray-500">
+                            <ImageIcon className="w-6 h-6 mb-2" />
+                            <span>Result Image</span>
+                          </span>
                     }
                   </span>
               }

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import Head from 'next/head';
-import { UpdateIcon } from '@radix-ui/react-icons';
+import { BarChartIcon, ImageIcon, UpdateIcon } from '@radix-ui/react-icons';
 import { useSearchParams } from 'next/navigation'
 
 import Footer from '../components/footer';
@@ -9,6 +9,7 @@ import DeviceSelector from '../components/device-selector';
 import InferenceTime from '../components/inference-time';
 import { BE, UI } from '../../constants';
 import DistributionGraph from '../components/distribution-graph';
+import { Header } from '../components/header';
 
 const DEFAULT_DEVICE = 'AUTO';
 
@@ -83,16 +84,16 @@ export default function ImageClassificationPage() {
         <title>OpenVINO App | Image Classification | {modelName}</title>
       </Head>
       <div className="content w-auto">
-        <div className="p-5">
-          <h1 className="text-4xl mb-8">{modelName}</h1>
+        <Header section="Image Classification Sample" />
+        <div className="p-4 pt-2">
           <fieldset disabled={isInferenceRunning}>
             <ul className="leading-10 mb-3">
-              <li className="flex mb-3">
-                <span className="mr-2 w-[80px]">Task:</span>
-                Image Classification
+              <li className="flex mb-2">
+                <span className="mr-2 w-[60px]">Model:</span>
+                {modelName}
               </li>
-              <li className="flex mb-3">
-                <span className="mr-2 w-[80px]">Device:</span>
+              <li className="flex mb-2">
+                <span className="mr-2 w-[60px]">Device:</span>
                 <DeviceSelector
                   setSelectedDevice={setSelectedDevice}
                 />
@@ -117,7 +118,10 @@ export default function ImageClassificationPage() {
               { selectedImg &&
                 <img src={selectedImg} alt="User img" className="absolute inset-0 w-full h-full object-contain p-2" />
               }
-              <span className="text-center text-xl">User Image</span>
+              <span className="text-center text-xl flex flex-col items-center text-gray-500">
+                <ImageIcon className="w-6 h-6 mb-2" />
+                <span>User Image</span>
+              </span>
             </div>
             <div className="w-1/2 flex items-center justify-center relative p-4">
               { resultData &&
@@ -128,7 +132,10 @@ export default function ImageClassificationPage() {
                   {
                     isInferenceRunning
                       ? <UpdateIcon className="mr-2 h-4 w-4 animate-spin" />
-                      : 'Results'
+                      : <span className="text-center text-xl flex flex-col items-center text-gray-500">
+                          <BarChartIcon className="w-6 h-6 mb-2" />
+                          <span>Distribution Graph</span>
+                        </span>
                   }
                 </span>
               }

@@ -43,7 +43,7 @@ export default function ModelsList({ models, onSelect, onRemove }: ModelListProp
     { !categories.length && <div className="w-full text-center p-10">Models List is empty</div> }
     { categories.map((category, idx) =>
       <div key={idx}>
-        <h2 className='p-4 pb-0 font-medium flex items-center'>{categoriesMap[category] || category}</h2>
+        <h2 className="p-4 pb-0 font-medium flex items-center text-lg">{categoriesMap[category] || category}</h2>
         <div className="p-4 grid grid-cols-3 gap-2">
           { groupped[category].map((m, j) =>
             <ModelCard key={j} name={m.name} isDefault={m.default} onSelect={onSelect} onRemove={onRemove} />)

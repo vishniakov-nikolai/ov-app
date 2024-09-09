@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import Head from 'next/head';
-import { UpdateIcon } from '@radix-ui/react-icons';
+import { ImageIcon, UpdateIcon } from '@radix-ui/react-icons';
 import { useSearchParams } from 'next/navigation'
 
 import Footer from '../components/footer';
@@ -11,6 +11,7 @@ import { BE, UI } from '../../constants';
 import { ISegmentationResult } from '../../globals/types';
 import { SegmentationCanvas } from '../components/segmentation-canvas';
 import RegionsList from '../components/regions-list';
+import { Header } from '../components/header';
 
 const DEFAULT_DEVICE = 'AUTO';
 
@@ -86,16 +87,16 @@ export default function ImageSegmentationPage() {
         <title>{ `OpenVINO App | Image Sermentation | ${modelName}` }</title>
       </Head>
       <div className="content w-auto">
-        <div className="p-5">
-          <h1 className="text-4xl mb-8">{modelName}</h1>
+        <Header section="Image Segmentation Sample" />
+        <div className="flex flex-col grow p-4 pt-2">
           <fieldset disabled={isInferenceRunning}>
             <ul className="leading-10 mb-3">
-            <li className="flex mb-3">
-                <span className="mr-2 w-[80px]">Task:</span>
-                Image Segmentation
+              <li className="flex mb-2">
+                <span className="mr-2 w-[60px]">Model:</span>
+                {modelName}
               </li>
-              <li className="flex mb-3">
-                <span className="mr-2 w-[80px]">Device:</span>
+              <li className="flex mb-2">
+                <span className="mr-2 w-[60px]">Device:</span>
                 <DeviceSelector
                   setSelectedDevice={setSelectedDevice}
                 />
@@ -115,12 +116,15 @@ export default function ImageSegmentationPage() {
               }
             </div>
           </fieldset>
-          <div className="border border-gray flex min-h-80">
+          <div className="border border-gray flex min-h-80 grow">
             <div className="w-1/2 flex items-center justify-center relative p-4">
               { selectedImg &&
                 <img ref={inputImgRef} src={selectedImg} alt="User img" className="absolute inset-0 w-full h-full object-contain p-2" />
               }
-              <span className="text-center text-xl">User Image</span>
+              <span className="text-center text-xl flex flex-col items-center text-gray-500">
+                <ImageIcon className="w-6 h-6 mb-2" />
+                <span>User Image</span>
+              </span>
             </div>
             <div className="w-1/2 flex items-center justify-center relative p-4">
               { segmentationResult
@@ -135,7 +139,10 @@ export default function ImageSegmentationPage() {
                     {
                       isInferenceRunning
                         ? <UpdateIcon className="mr-2 h-4 w-4 animate-spin" />
-                        : 'Result Image'
+                        : <span className="text-center text-xl flex flex-col items-center text-gray-500">
+                            <ImageIcon className="w-6 h-6 mb-2" />
+                            <span>Result Image</span>
+                          </span>
                     }
                   </span>
               }

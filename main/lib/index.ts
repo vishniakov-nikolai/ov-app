@@ -125,7 +125,7 @@ class ApplicationModels {
   }
 
   async remove(name: string) {
-    this.models = this.models.filter(m => m.name !== name && !m.default);
+    this.models = this.models.filter(m => m.name !== name || m.default);
     await this.save();
 
     return await this.load();
