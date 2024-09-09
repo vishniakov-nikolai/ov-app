@@ -22,7 +22,7 @@ export function groupBy(array, key) {
   }, {});
 }
 
-export function round(number, decimalPlaces) {
+export function round(number, decimalPlaces = 0) {
   const factor = Math.pow(10, decimalPlaces);
 
   return Math.round(number * factor) / factor;

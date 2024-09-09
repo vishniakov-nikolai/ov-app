@@ -23,6 +23,7 @@ const isProd = process.env.NODE_ENV === 'production';
 const ApplicationModelsSingleton = getApplicationModels();
 
 let lastInferenceTime: BigInt = 0n;
+let mainWindow, sampleWindow;
 
 if (isProd) {
   serve({ directory: 'app' });
@@ -133,12 +134,18 @@ ipcMain.on(BE.START.INIT_MODEL, async (event, params: InitModelParams) => {
   if (!config) throw new Error(`Model '${modelName}' is not found`);
 
   console.log('== start init');
-  await InferenceHandlerSingleton.init(config, device,
-    (nanosec) => { lastInferenceTime = nanosec; },
-    (progressInfo) => {
-      event.reply(UI.PROGRESS_UPDATE, progressInfo);
-    },
-  );
+  try {
+    await InferenceHandlerSingleton.init(config, device,
+      (nanosec) => { lastInferenceTime = nanosec; },
+      (progressInfo) => {
+        console.log(progressInfo);
+        event.reply(UI.PROGRESS_UPDATE, progressInfo);
+      },
+    );
+  } catch(e) {
+    event.reply(UI.EXCEPTION, e.message);
+    sampleWindow?.close();
+  }
   console.log('== end init');
 
   event.reply(UI.END.INIT_MODEL, []);
@@ -172,8 +179,6 @@ ipcMain.on(BE.START.OV.INFERENCE, async (event, { value, config }) => {
   }
 });
 
-let mainWindow;
-
 main();
 
 async function main() {
@@ -205,7 +210,7 @@ async function main() {
 async function createModelWindow(modelConfig: ModelConfig) {
   mainWindow.hide();
 
-  const sampleWindow = createWindow('sampleWindow', {
+  sampleWindow = createWindow('sampleWindow', {
     width: 900,
     height: 750,
     modal: true,
