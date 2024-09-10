@@ -12,6 +12,7 @@ import { ISegmentationResult } from '../../globals/types';
 import { SegmentationCanvas } from '../components/segmentation-canvas';
 import RegionsList from '../components/regions-list';
 import { Header } from '../components/header';
+import { ErrorModal } from '../components/error-modal';
 
 const DEFAULT_DEVICE = 'AUTO';
 
@@ -27,6 +28,8 @@ export default function ImageSegmentationPage() {
   const [selectedDevice, setSelectedDevice] = useState(DEFAULT_DEVICE);
   const [segmentationResult, setSegmentationResult] = useState<ISegmentationResult[]>(null);
   const [hoveredRegion, setHoveredRegion] = useState<string>(null);
+  const [errorMessage, setErrorMessage] = useState('');
+  const [showError, setShowError] = useState(false);
 
   useEffect(() => {
     if (!modelName || !selectedDevice) return;
@@ -61,9 +64,10 @@ export default function ImageSegmentationPage() {
     });
   }, []);
   useEffect(() => {
-    return window.ipc.on(UI.EXCEPTION, (errorMessage) => {
+    return window.ipc.on(UI.EXCEPTION, (errorMessage: string) => {
       setIsInferenceRunning(false);
-      alert(errorMessage);
+      setErrorMessage(errorMessage);
+      setShowError(true);
     });
   }, []);
   useEffect(() => {
@@ -160,6 +164,11 @@ export default function ImageSegmentationPage() {
           }
         </div>
         <Footer className="mt-auto" />
+        <ErrorModal
+          isOpen={showError}
+          setIsOpen={setShowError}
+          message={errorMessage}
+        />
       </div>
 
     </React.Fragment>

@@ -23,7 +23,7 @@ const isProd = process.env.NODE_ENV === 'production';
 const ApplicationModelsSingleton = getApplicationModels();
 
 let lastInferenceTime: BigInt = 0n;
-let mainWindow, sampleWindow;
+let mainWindow, sampleWindow, errorWindow;
 
 if (isProd) {
   serve({ directory: 'app' });
@@ -152,8 +152,8 @@ ipcMain.on(BE.START.INIT_MODEL, async (event, params: InitModelParams) => {
     );
   } catch(e) {
     console.log(e);
-    event.reply(UI.EXCEPTION, e.message);
     sampleWindow?.close();
+    await createErrorWindow(e.message);
   }
   console.log('== end init');
 
@@ -233,6 +233,35 @@ async function createModelWindow(modelConfig: ModelConfig) {
   });
 
   await loadWindowURL(sampleWindow, `${modelConfig.task}?model=${modelConfig.name}`);
+
+  sampleWindow.webContents.setWindowOpenHandler(openLinkInBrowserHandler);
+
+  // FIXME: Doesn't call for some reason
+  // sampleWindow.once('ready-to-show', () => {
+  //   sampleWindow.show();
+  // });
+
+  sampleWindow.on('close', () => { mainWindow.show(); });
+}
+
+async function createErrorWindow(errorMessage: string) {
+  // mainWindow.hide();
+
+  sampleWindow = createWindow('sampleWindow', {
+    width: 500,
+    height: 400,
+    modal: true,
+    parent: mainWindow,
+    webPreferences: {
+      preload: path.join(__dirname, 'preload.js'),
+      webSecurity: false,
+    },
+    titleBarOverlay: true,
+    autoHideMenuBar: true,
+    resizable: false,
+  });
+
+  await loadWindowURL(sampleWindow, 'error');
 
   sampleWindow.webContents.setWindowOpenHandler(openLinkInBrowserHandler);
 

@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react';
 import Head from 'next/head';
-import { UpdateIcon } from '@radix-ui/react-icons';
 import { useSearchParams } from 'next/navigation'
 
 import Footer from '../components/footer';
@@ -10,7 +9,7 @@ import { BE, UI } from '../../constants';
 import { Label } from '../components/ui/label';
 import { Input } from '../components/ui/input';
 import { Header } from '../components/header';
-import { AlertDialog, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '../components/ui/alert-dialog';
+import { ErrorModal } from '../components/error-modal';
 
 const DEFAULT_DEVICE = 'AUTO';
 
@@ -23,8 +22,8 @@ export default function TextGenerationPage() {
   const [originalPromt, setOriginalPromt] = useState(null);
 
   const [temperature, setTemperature] = useState('1');
-  const [maxNewTokens, setMaxNewTokens] = useState('');
-  const [repetitionPenalty, setRepetitionPenalty] = useState('1');
+  const [maxNewTokens, setMaxNewTokens] = useState('100');
+  const [repetitionPenalty, setRepetitionPenalty] = useState('1.1');
   const [noRepeatNgramSize, setNoRepeatNgramSize] = useState('0');
   const [numBeams, setNumBeams] = useState('1');
   const [numReturnSequences, setNumReturnSequences] = useState('1');
@@ -208,7 +207,7 @@ export default function TextGenerationPage() {
                   className="col-span-2 h-8"
                   value={numReturnSequences}
                   min={1}
-                  step={0.1}
+                  step={1}
                   onChange={(e) => setNumReturnSequences(e.target.value)}
                   type="number"
                 />
@@ -228,23 +227,11 @@ export default function TextGenerationPage() {
             </> }
         </div>
         <Footer className="mt-auto" />
-        <AlertDialog open={showError} onOpenChange={setShowError}>
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle className="flex items-center">
-                <div className="text-destructive w-8 h-8 mr-2">
-                  <svg className="w-full h-full" stroke="currentColor" fill="none" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" xmlns="http://www.w3.org/2000/svg"><polygon points="7.86 2 16.14 2 22 7.86 22 16.14 16.14 22 7.86 22 2 16.14 2 7.86 7.86 2"></polygon><line x1="12" x2="12" y1="8" y2="12"></line><line x1="12" x2="12.01" y1="16" y2="16"></line></svg>
-                </div>
-                <span>Something went wrong</span>
-              </AlertDialogTitle>
-              <AlertDialogDescription>{errorMessage}</AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel>Ok</AlertDialogCancel>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
-
+        <ErrorModal
+          isOpen={showError}
+          setIsOpen={setShowError}
+          message={errorMessage}
+        />
       </div>
 
     </React.Fragment>

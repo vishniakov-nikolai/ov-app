@@ -11,6 +11,7 @@ export type IModelConfig = {
   files?: string[],
   task: TaskType,
   default?: boolean,
+  favorite?: boolean,
 };
 
 export interface ISegmentationResult {

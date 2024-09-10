@@ -10,6 +10,7 @@ import InferenceTime from '../components/inference-time';
 import { BE, UI } from '../../constants';
 import DistributionGraph from '../components/distribution-graph';
 import { Header } from '../components/header';
+import { ErrorModal } from '../components/error-modal';
 
 const DEFAULT_DEVICE = 'AUTO';
 
@@ -21,6 +22,8 @@ export default function ImageClassificationPage() {
   const [isInferenceRunning, setIsInferenceRunning] = useState(false);
   const [inferenceTime, setInferenceTime] = useState(null);
   const [selectedDevice, setSelectedDevice] = useState(DEFAULT_DEVICE);
+  const [errorMessage, setErrorMessage] = useState('');
+  const [showError, setShowError] = useState(false);
 
   useEffect(() => {
     if (!modelName || !selectedDevice) return;
@@ -57,9 +60,10 @@ export default function ImageClassificationPage() {
     });
   }, []);
   useEffect(() => {
-    return window.ipc.on(UI.EXCEPTION, (errorMessage) => {
+    return window.ipc.on(UI.EXCEPTION, (errorMessage: string) => {
       setIsInferenceRunning(false);
-      alert(errorMessage);
+      setErrorMessage(errorMessage);
+      setShowError(true);
     });
   }, []);
   useEffect(() => {
@@ -147,6 +151,11 @@ export default function ImageClassificationPage() {
           }
         </div>
         <Footer className="mt-auto" />
+        <ErrorModal
+          isOpen={showError}
+          setIsOpen={setShowError}
+          message={errorMessage}
+        />
       </div>
 
     </React.Fragment>

@@ -40,6 +40,7 @@ export class ModelConfig {
   files: string[];
   task: TaskType;
   default: boolean;
+  favorite: boolean;
 
   constructor(config: IModelConfig) {
     if (!ModelConfig.isValid(config))
@@ -49,6 +50,7 @@ export class ModelConfig {
     this.files = config.files || DEFAULT_OV_MODEL_FILES;
     this.task = config.task;
     this.default = config.default;
+    this.favorite = config.favorite;
   }
 
   getConfig() {

@@ -12,6 +12,7 @@ import { IDetectionResult } from '../../globals/types';
 import { DetectionCanvas } from '../components/detection-canvas';
 import { DetectionsList } from '../components/detections-list';
 import { Header } from '../components/header';
+import { ErrorModal } from '../components/error-modal';
 
 const DEFAULT_DEVICE = 'AUTO';
 const TASK_NAME = 'Object Detection';
@@ -29,6 +30,8 @@ export default function ImageSegmentationPage() {
   const [detectionResult, setDetectionResult] = useState<IDetectionResult[]>(null);
   const [filteredResults, setFilteredResults] = useState<IDetectionResult[]>(null);
   const [hoveredResult, setHoveredResult] = useState<IDetectionResult>(null);
+  const [errorMessage, setErrorMessage] = useState('');
+  const [showError, setShowError] = useState(false);
 
   useEffect(() => {
     if (!modelName || !selectedDevice) return;
@@ -64,9 +67,10 @@ export default function ImageSegmentationPage() {
     });
   }, []);
   useEffect(() => {
-    return window.ipc.on(UI.EXCEPTION, (errorMessage) => {
+    return window.ipc.on(UI.EXCEPTION, (errorMessage: string) => {
       setIsInferenceRunning(false);
-      alert(errorMessage);
+      setErrorMessage(errorMessage);
+      setShowError(true);
     });
   }, []);
   useEffect(() => {
@@ -164,6 +168,11 @@ export default function ImageSegmentationPage() {
           }
         </div>
         <Footer className="mt-auto" />
+        <ErrorModal
+          isOpen={showError}
+          setIsOpen={setShowError}
+          message={errorMessage}
+        />
       </div>
 
     </React.Fragment>
