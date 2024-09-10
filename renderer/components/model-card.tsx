@@ -8,8 +8,10 @@ type ModelCardProps = {
   isLocal?: boolean,
   onSelect: (modelName) => void,
   onRemove?: (modelName) => void,
+  filter?: string,
 };
-export function ModelCard({ name, isDefault, isLocal, onSelect, onRemove }: ModelCardProps) {
+export function ModelCard(props: ModelCardProps) {
+  const { name, isDefault, isLocal, onSelect, onRemove, filter } = props;
   const title = `Open ${name} model`;
 
   return <div className="border p-4 hover:border-primary hover:shadow-sm transition-all">
@@ -31,8 +33,12 @@ export function ModelCard({ name, isDefault, isLocal, onSelect, onRemove }: Mode
         title={`Open model page at Hugging Face site`}>
         <ExternalLinkIcon />
       </Link>
-      <h3 className="truncate cursor-pointer hover:text-primary transition-colors" title={title}
-        onClick={() => onSelect(name)}>{name}</h3>
+      <h3
+        className="truncate cursor-pointer hover:text-primary transition-colors"
+        title={title}
+        onClick={() => onSelect(name)}>
+        <Highlight text={name} search={filter} />
+      </h3>
     </div>
     <Button className="mt-4" variant="secondary" size="sm" title={title}
       onClick={() => onSelect(name)}>Open</Button>
@@ -41,4 +47,13 @@ export function ModelCard({ name, isDefault, isLocal, onSelect, onRemove }: Mode
 
 function getHFLink(modelName) {
   return `https://huggingface.co/${modelName}`;
+}
+
+function Highlight({ text, search }: { text: string, search?: string }) {
+  if (!search?.length) return text;
+
+  const regEx = new RegExp(search, 'gi');
+  const html = text.replace(regEx, match => `<span class="bg-yellow-200">${match}</span>`);
+
+  return <span dangerouslySetInnerHTML={{ __html: html }}></span>;
 }

@@ -112,7 +112,7 @@ export function AddModelCard({ task }: AddModelCardProps) {
                     value={field.value}
                     disabled
                   >
-                    <SelectTrigger className="h-8">
+                    <SelectTrigger className="">
                       <SelectValue placeholder="Select Task" />
                     </SelectTrigger>
                     <SelectContent>
@@ -133,7 +133,7 @@ export function AddModelCard({ task }: AddModelCardProps) {
               <FormItem>
                 <FormLabel>HF Name</FormLabel>
                 <FormControl>
-                  <Input className="h-8" { ...field }/>
+                  <Input { ...field }/>
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -148,7 +148,7 @@ export function AddModelCard({ task }: AddModelCardProps) {
                 <FormControl>
                   <Input
                     placeholder="openvino_model.xml, openvino_model.bin"
-                    className="col-span-2 h-8"
+                    className="col-span-2"
                     { ...field }
                   />
                 </FormControl>

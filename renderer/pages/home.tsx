@@ -6,11 +6,13 @@ import { BE, UI } from '../../constants';
 import ModelsList from '../components/models-list';
 
 import type { IModelConfig } from '../../globals/types';
-import { Header } from '../components/header';
+import { SearchInput } from '../components/ui/search-input';
 
 export default function HomePage() {
   const [modelsList, setModelsList] = useState<IModelConfig[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [filter, setFilter] = useState('');
+  const [filteredModels, setFilteredModels] = useState<IModelConfig[]>([]);
 
   useEffect(() => {
     setIsLoading(true);
@@ -35,6 +37,15 @@ export default function HomePage() {
       },
     );
   }, []);
+  useEffect(() => {
+    const filteredModels = !filter?.length
+      ? modelsList
+      : modelsList.filter(m =>
+        m.name.toLocaleLowerCase().includes(filter.toLocaleLowerCase())
+      );
+
+    setFilteredModels(filteredModels);
+  }, [filter, modelsList]);
 
   return (
     <React.Fragment>
@@ -49,15 +60,27 @@ export default function HomePage() {
         </div>
       }
       <div className="flex flex-col flex-nowrap h-full">
-        <Header section="Models List" />
+        <nav className="flex p-4 border-b items-center shadow-sm">
+          <img
+            className="w-[145px] mt-[2px]"
+            src="/svg/ov-logo.svg" alt="OpenVINO logo" />
+          <p className="text-3xl ml-2 font-medium pr-4">App</p>
+          <p className="text-2xl pl-4 border-l">Models List</p>
+          <div className="w-[200px] ml-auto">
+            <SearchInput placeholder="Filter Models"
+              onChange={(e) => setFilter(e.target.value)} value={filter} />
+          </div>
+        </nav>
         <ModelsList
-          models={modelsList}
+          models={filteredModels}
+          filter={filter}
           onSelect={(modelName) => window.ipc.send(BE.OPEN_MODEL, modelName)}
           onRemove={removeModel}
         />
         <footer className="p-5 mt-auto border-t shadow-sm">
           <div className="text-center mono text-sm">
-            Available {modelsList.length} models
+            Available {modelsList.length} Models
+            { !!filter?.length && ` / Found ${filteredModels.length} by Filter` }
           </div>
         </footer>
       </div>

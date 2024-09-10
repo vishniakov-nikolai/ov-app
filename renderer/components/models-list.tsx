@@ -32,21 +32,30 @@ const categoriesMap = {
 
 type ModelListProps = {
   models: IModelConfig[],
+  filter?: string,
   onSelect: (modelName: string) => void,
   onRemove?: (name: string) => void,
 };
-export default function ModelsList({ models, onSelect, onRemove }: ModelListProps) {
+export default function ModelsList(props: ModelListProps) {
+  const { models, filter, onSelect, onRemove } = props;
   const groupped = groupBy(models, 'task');
   const categories = Object.keys(groupped);
 
   return (<div className="grow overflow-auto">
-    { !categories.length && <div className="w-full text-center p-10">Models List is empty</div> }
+    { !categories.length && <div className="w-full text-center p-10">There are no models matching the filter</div> }
     { categories.map((category, idx) =>
       <div key={idx}>
         <h2 className="p-4 pb-0 font-medium flex items-center text-lg">{categoriesMap[category] || category}</h2>
         <div className="p-4 grid grid-cols-3 gap-2">
           { groupped[category].map((m, j) =>
-            <ModelCard key={j} name={m.name} isDefault={m.default} onSelect={onSelect} onRemove={onRemove} />)
+            <ModelCard
+              key={j}
+              name={m.name}
+              isDefault={m.default}
+              onSelect={onSelect}
+              onRemove={onRemove}
+              filter={filter}
+            />)
           }
           <AddModelCard task={category} />
         </div>
