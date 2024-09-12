@@ -19,6 +19,7 @@ const actions = {
       INIT_MODEL: 'ui.end.initModel',
       SAVE_MODEL: 'ui.end.saveModel',
       REMOVE_MODEL: 'ui.end.removeModel',
+      FETCH_EXCEPTION_INFO: 'ui.end.fetchExceptionInfo',
     },
     EXCEPTION: 'ui.exception',
     PROGRESS_UPDATE: 'ui.progressUpdate',
@@ -40,7 +41,9 @@ const actions = {
       },
       SAVE_MODEL: 'be.start.ov.saveModel',
       REMOVE_MODEL: 'be.start.ov.removeModel',
+      FETCH_EXCEPTION_INFO: 'be.start.fetchExceptionInfo',
     },
+    CLOSE_ERROR_WINDOW: 'be.close_error_window',
   }
 };
 

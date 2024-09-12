@@ -24,6 +24,7 @@ const ApplicationModelsSingleton = getApplicationModels();
 
 let lastInferenceTime: BigInt = 0n;
 let mainWindow, sampleWindow, errorWindow;
+let lastError;
 
 if (isProd) {
   serve({ directory: 'app' });
@@ -131,6 +132,14 @@ ipcMain.on(BE.START.REMOVE_MODEL, async (event, { name }: { name: string }) => {
   event.reply(UI.END.REMOVE_MODEL, applicationModels.models);
 });
 
+ipcMain.on(BE.START.FETCH_EXCEPTION_INFO, async (event) => {
+  event.reply(UI.END.FETCH_EXCEPTION_INFO, lastError);
+});
+
+ipcMain.on(BE.CLOSE_ERROR_WINDOW, async () => {
+  errorWindow.close();
+});
+
 type InitModelParams = { modelName: string, device: string };
 ipcMain.on(BE.START.INIT_MODEL, async (event, params: InitModelParams) => {
   event.reply(UI.START.INIT_MODEL);
@@ -152,8 +161,9 @@ ipcMain.on(BE.START.INIT_MODEL, async (event, params: InitModelParams) => {
     );
   } catch(e) {
     console.log(e);
+    lastError = e;
     sampleWindow?.close();
-    await createErrorWindow(e.message);
+    await createErrorWindow();
   }
   console.log('== end init');
 
@@ -244,12 +254,10 @@ async function createModelWindow(modelConfig: ModelConfig) {
   sampleWindow.on('close', () => { mainWindow.show(); });
 }
 
-async function createErrorWindow(errorMessage: string) {
-  // mainWindow.hide();
-
-  sampleWindow = createWindow('sampleWindow', {
+async function createErrorWindow() {
+  errorWindow = createWindow('errorWindow', {
     width: 500,
-    height: 400,
+    height: 450,
     modal: true,
     parent: mainWindow,
     webPreferences: {
@@ -261,16 +269,11 @@ async function createErrorWindow(errorMessage: string) {
     resizable: false,
   });
 
-  await loadWindowURL(sampleWindow, 'error');
+  await loadWindowURL(errorWindow, 'error');
 
-  sampleWindow.webContents.setWindowOpenHandler(openLinkInBrowserHandler);
+  errorWindow.webContents.setWindowOpenHandler(openLinkInBrowserHandler);
 
-  // FIXME: Doesn't call for some reason
-  // sampleWindow.once('ready-to-show', () => {
-  //   sampleWindow.show();
-  // });
-
-  sampleWindow.on('close', () => { mainWindow.show(); });
+  errorWindow.on('close', () => { mainWindow.show(); });
 }
 
 async function loadWindowURL(
