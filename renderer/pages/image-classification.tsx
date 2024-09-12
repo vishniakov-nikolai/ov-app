@@ -12,7 +12,7 @@ import DistributionGraph from '../components/distribution-graph';
 import { Header } from '../components/header';
 import { ErrorModal } from '../components/error-modal';
 
-const DEFAULT_DEVICE = 'AUTO';
+const DEFAULT_DEVICE = 'CPU';
 
 export default function ImageClassificationPage() {
   const searchParams = useSearchParams()

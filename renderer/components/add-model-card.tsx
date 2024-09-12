@@ -61,7 +61,7 @@ export function AddModelCard({ task }: AddModelCardProps) {
     window.ipc.send(BE.START.SAVE_MODEL, {
       task: data.task,
       modelName: data.name,
-      files: data.files.split(','),
+      files: data.files.split(',').map(f => f.trim()),
     });
   };
 
@@ -147,7 +147,7 @@ export function AddModelCard({ task }: AddModelCardProps) {
                 <FormLabel>Files</FormLabel>
                 <FormControl>
                   <Input
-                    placeholder="openvino_model.xml, openvino_model.bin"
+                    placeholder="openvino_model.xml,openvino_model.bin"
                     className="col-span-2"
                     { ...field }
                   />

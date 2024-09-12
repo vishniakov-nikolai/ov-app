@@ -7,7 +7,7 @@ import {
 } from '../components/ui/select';
 import { useAppContext } from '../providers/app-context';
 
-export default function DeviceSelector({ setSelectedDevice, defaultDevice = 'AUTO' }) {
+export default function DeviceSelector({ setSelectedDevice, defaultDevice = 'CPU' }) {
   const { availableDevices } = useAppContext();
 
   return <Select

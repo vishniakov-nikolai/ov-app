@@ -11,7 +11,7 @@ import { Input } from '../components/ui/input';
 import { Header } from '../components/header';
 import { ErrorModal } from '../components/error-modal';
 
-const DEFAULT_DEVICE = 'AUTO';
+const DEFAULT_DEVICE = 'CPU';
 
 export default function TextGenerationPage() {
   const searchParams = useSearchParams()

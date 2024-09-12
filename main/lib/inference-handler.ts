@@ -13,12 +13,12 @@ const InferenceHandlerSingleton = (function() {
 
   let _task: string | null = null;
   let _modelName: string | null = null;
-  let _device: string = "AUTO";
+  let _device: string = 'CPU';
   let _files: string[] = null;
 
   async function init(
     config: IModelConfig,
-    device = 'AUTO',
+    device = 'CPU',
     inferenceCallback,
     progressCallback,
   ) {
@@ -48,16 +48,8 @@ const InferenceHandlerSingleton = (function() {
               progressCallback({ status, name, file, progress, loaded, total });
 
             if (!progress) return;
-
-            // process.stdout.clearLine();
-            // process.stdout.cursorTo(0);
-            process.stdout.write(`== progress of '${file}': ${Math.ceil(progress)}%`);
           },
           'model_file_name': _files,
-          // 'model_file_name': ['openvino_encoder_model.xml', 'openvino_encoder_model.bin'],
-          // 'model_file_name': ['onnx/model_quantized.onnx'],
-          // 'model_file_name': ['onnx/model.onnx'],
-          // 'model_file_name': [],
           device: _device,
           inferenceCallback,
         },

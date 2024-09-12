@@ -14,7 +14,7 @@ import { DetectionsList } from '../components/detections-list';
 import { Header } from '../components/header';
 import { ErrorModal } from '../components/error-modal';
 
-const DEFAULT_DEVICE = 'AUTO';
+const DEFAULT_DEVICE = 'CPU';
 const TASK_NAME = 'Object Detection';
 
 export default function ImageSegmentationPage() {

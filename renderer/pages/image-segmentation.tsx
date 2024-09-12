@@ -14,7 +14,7 @@ import RegionsList from '../components/regions-list';
 import { Header } from '../components/header';
 import { ErrorModal } from '../components/error-modal';
 
-const DEFAULT_DEVICE = 'AUTO';
+const DEFAULT_DEVICE = 'CPU';
 
 export default function ImageSegmentationPage() {
   const searchParams = useSearchParams()
