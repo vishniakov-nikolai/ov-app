@@ -46,7 +46,7 @@ export default function ModelsList(props: ModelListProps) {
     { categories.map((category, idx) =>
       <div key={idx}>
         <h2 className="p-4 pb-0 font-medium flex items-center text-lg">{categoriesMap[category] || category}</h2>
-        <div className="p-4 grid grid-cols-3 gap-2">
+        <div className="p-4 grid grid-cols-3 gap-4">
           { groupped[category].map((m, j) =>
             <ModelCard
               key={j}

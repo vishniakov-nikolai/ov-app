@@ -14,7 +14,7 @@ export function ModelCard(props: ModelCardProps) {
   const { name, isDefault, isLocal, onSelect, onRemove, filter } = props;
   const title = `Open ${name} model`;
 
-  return <div className="border p-4 hover:border-primary hover:shadow-sm transition-all">
+  return <div className="border p-4 border-gray-400 hover:border-primary hover:shadow-md transition-all bg-white">
     <div className="flex mb-4 text-gray-400">
       <div title="Add model to favorites">
         <StarIcon className="cursor-pointer hover:text-orange-300 transition-colors"/>

@@ -1,5 +1,5 @@
 export function Header({ section }: { section?: string }) {
-  return <nav className="flex p-4 border-b items-center shadow-sm">
+  return <nav className="flex p-4 border-b items-center shadow-md">
     <img
       className="w-[145px] mt-[2px]"
       src="/svg/ov-logo.svg" alt="OpenVINO logo" />

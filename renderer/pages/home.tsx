@@ -59,8 +59,8 @@ export default function HomePage() {
           Loading Models List...
         </div>
       }
-      <div className="flex flex-col flex-nowrap h-full">
-        <nav className="flex p-4 border-b items-center shadow-sm">
+      <div className="flex flex-col flex-nowrap h-full bg-gray-50">
+        <nav className="flex p-4 border-b items-center shadow-md bg-white">
           <img
             className="w-[145px] mt-[2px]"
             src="/svg/ov-logo.svg" alt="OpenVINO logo" />
@@ -77,7 +77,7 @@ export default function HomePage() {
           onSelect={(modelName) => window.ipc.send(BE.OPEN_MODEL, modelName)}
           onRemove={removeModel}
         />
-        <footer className="p-5 mt-auto border-t shadow-sm">
+        <footer className="p-5 mt-auto border-t shadow-md bg-white">
           <div className="text-center mono text-sm">
             Available {modelsList.length} Models
             { !!filter?.length && ` / Found ${filteredModels.length} by Filter` }
