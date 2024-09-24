@@ -12,6 +12,7 @@ import {
 import serve from 'electron-serve';
 import url from 'node:url';
 import { addon as ov } from 'openvino-node';
+import log from 'electron-log/main';
 
 import { createWindow } from './helpers';
 import { BE, UI } from '../constants';
@@ -25,6 +26,9 @@ const ApplicationModelsSingleton = getApplicationModels();
 let lastInferenceTime: BigInt = 0n;
 let mainWindow, sampleWindow, errorWindow;
 let lastError;
+
+log.initialize();
+log.errorHandler.startCatching();
 
 if (isProd) {
   serve({ directory: 'app' });
@@ -112,7 +116,8 @@ ipcMain.on(BE.START.SAVE_MODEL, async (event, modelConfigData: IModelConfigData)
   try {
     applicationModels.add(model);
   } catch(e) {
-    console.log(e.message);
+    log.error('Error on model adding');
+    log.errorHandler.handle(e);
     return;
   }
 
@@ -125,7 +130,8 @@ ipcMain.on(BE.START.REMOVE_MODEL, async (event, { name }: { name: string }) => {
   try {
     applicationModels.remove(name);
   } catch(e) {
-    console.log(e.message);
+    log.error('Error on model removing');
+    log.errorHandler.handle(e);
     return;
   }
 
@@ -160,7 +166,9 @@ ipcMain.on(BE.START.INIT_MODEL, async (event, params: InitModelParams) => {
       },
     );
   } catch(e) {
-    console.log(e);
+    log.error('Error on `InferenceHandlerSingleton.init`:');
+    log.errorHandler.handle(e);
+
     lastError = e;
     sampleWindow?.close();
     await createErrorWindow();
@@ -194,13 +202,15 @@ ipcMain.on(BE.START.OV.INFERENCE, async (event, { value, config }) => {
     event.reply(UI.END.INFERENCE, { data: output, elapsedTime: lastInferenceTime });
   } catch(e) {
     event.reply(UI.EXCEPTION, e.message);
-    console.log(e);
+    log.error('Error on model Inference:');
+    log.errorHandler.handle(e);
   }
 });
 
 main();
 
 async function main() {
+  log.info('Enter into main');
   await app.whenReady();
 
   protocol.handle('atom', (request) => {
