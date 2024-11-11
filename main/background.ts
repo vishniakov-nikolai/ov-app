@@ -17,14 +17,14 @@ import log from 'electron-log/main';
 import { createWindow } from './helpers';
 import { BE, UI } from '../constants';
 import InferenceHandlerSingleton from './lib/inference-handler';
-import { checkRemoteFile, getApplicationModels, ModelConfig } from './lib';
+import { checkRemoteFile, getApplicationModels, ModelConfig, saveDataUrlAsImg } from './lib';
 import { IModelConfig } from '../globals/types';
 
 const isProd = process.env.NODE_ENV === 'production';
 const ApplicationModelsSingleton = getApplicationModels();
 
 let lastInferenceTime: BigInt = 0n;
-let mainWindow, sampleWindow, errorWindow;
+let mainWindow, sampleWindow, errorWindow, cameraWindow;
 let lastError;
 
 log.initialize();
@@ -74,6 +74,10 @@ ipcMain.on(BE.START.OV.SELECT_IMG, async (event) => {
   });
 
   event.reply(UI.END.SELECT_IMG, result.canceled ? null : result.filePaths[0]);
+});
+
+ipcMain.on(BE.START.OV.TAKE_PHOTO, async () => {
+  await createCameraWindow();
 });
 
 type IModelConfigData = {
@@ -144,6 +148,13 @@ ipcMain.on(BE.START.FETCH_EXCEPTION_INFO, async (event) => {
 
 ipcMain.on(BE.CLOSE_ERROR_WINDOW, async () => {
   errorWindow.close();
+});
+
+ipcMain.on(BE.START.SAVE_IMAGE, async (event, { data }) => {
+  const imgPath = await saveDataUrlAsImg(data);
+
+  cameraWindow.close();
+  sampleWindow.webContents.send(UI.END.SELECT_IMG, imgPath);
 });
 
 type InitModelParams = { modelName: string, device: string };
@@ -284,6 +295,26 @@ async function createErrorWindow() {
   errorWindow.webContents.setWindowOpenHandler(openLinkInBrowserHandler);
 
   errorWindow.on('close', () => { mainWindow.show(); });
+}
+
+async function createCameraWindow() {
+  cameraWindow = createWindow('cameraWindow', {
+    width: 850,
+    height: 650,
+    modal: true,
+    parent: sampleWindow,
+    webPreferences: {
+      preload: path.join(__dirname, 'preload.js'),
+      webSecurity: false,
+    },
+    titleBarOverlay: true,
+    autoHideMenuBar: true,
+    resizable: false,
+  });
+
+  await loadWindowURL(cameraWindow, 'camera');
+
+  cameraWindow.on('close', () => { sampleWindow.show(); });
 }
 
 async function loadWindowURL(

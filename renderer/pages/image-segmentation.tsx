@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import Head from 'next/head';
 import { ImageIcon, UpdateIcon } from '@radix-ui/react-icons';
 import { useSearchParams } from 'next/navigation'
+import { CameraIcon } from 'lucide-react';
 
 import Footer from '../components/footer';
 import { Button } from '../components/ui/button';
@@ -125,6 +126,13 @@ export default function ImageSegmentationPage() {
                 onClick={() => window.ipc.send(BE.START.OV.SELECT_IMG)}
                 className="mr-2"
               >Select Image</Button>
+              <Button
+                variant="outline"
+                onClick={() => window.ipc.send(BE.START.OV.TAKE_PHOTO)}
+                className="mr-2">
+                <CameraIcon className="w-6 h-6 mr-2" />
+                <span>Take Photo</span>
+              </Button>
               <ImgHistory
                 items={imgHistory}
                 selectItem={initiateInference}

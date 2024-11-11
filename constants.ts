@@ -37,11 +37,13 @@ const actions = {
       INIT_MODEL: 'be.start.initModel',
       OV: {
         SELECT_IMG: 'be.start.ov.selectImg',
+        TAKE_PHOTO: 'be.start.ov.takePhoto',
         INFERENCE: 'be.start.ov.inference',
       },
       SAVE_MODEL: 'be.start.ov.saveModel',
       REMOVE_MODEL: 'be.start.ov.removeModel',
       FETCH_EXCEPTION_INFO: 'be.start.fetchExceptionInfo',
+      SAVE_IMAGE: 'be.start.saveImage',
     },
     CLOSE_ERROR_WINDOW: 'be.close_error_window',
   }

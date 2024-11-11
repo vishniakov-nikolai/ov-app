@@ -193,3 +193,28 @@ function pathJoin(...parts) {
   })
   return parts.join('/');
 }
+
+export async function saveDataUrlAsImg(dataUrl) {
+  const matches = dataUrl.match(/^data:image\/([a-zA-Z]+);base64,(.+)$/);
+  if (!matches || matches.length !== 3) {
+    throw new Error('Invalid data URL');
+  }
+
+  const imageType = matches[1];
+  const base64Data = matches[2];
+
+  // Convert the base64 string to a buffer
+  const buffer = Buffer.from(base64Data, 'base64');
+  const filename = `capture.${new Date().getTime()}.${imageType}`;
+  const outputPath = join(userDataPath, filename);
+
+  // Write the buffer to a file
+  try {
+    await fs.writeFile(outputPath, buffer);
+  } catch (e) {
+    console.error('Error writing file:', e);
+  }
+  console.log('Image saved to:', outputPath);
+
+  return outputPath;
+}
