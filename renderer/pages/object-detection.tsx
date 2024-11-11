@@ -43,6 +43,7 @@ export default function ImageSegmentationPage() {
     return window.ipc.on(UI.END.SELECT_IMG, (imgPath) => {
       if (!imgPath) return;
 
+      setHoveredResult(null);
       setSelectedImg(imgPath);
       initiateInference(imgPath);
     });
@@ -59,7 +60,6 @@ export default function ImageSegmentationPage() {
         data: IDetectionResult[],
         elapsedTime: BigInt,
       }) => {
-        console.log(inferenceResult);
       setIsInferenceRunning(false);
       setDetectionResult(inferenceResult.data);
       setInferenceTime(inferenceResult.elapsedTime);

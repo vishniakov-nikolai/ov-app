@@ -13,6 +13,7 @@ type DetectionListProps = {
 export function DetectionsList(props: DetectionListProps) {
   const { items, filtered, setFiltered, setHovered } = props;
   const [threshold, setThreshold] = useState<number>(0);
+  const [hoveredId, setHoveredId] = useState<number>(null);
   const listRef = useRef(null);
 
   useEffect(() => {
@@ -20,6 +21,12 @@ export function DetectionsList(props: DetectionListProps) {
 
     setFiltered(filtered);
   }, [threshold, setFiltered]);
+
+  function getItemClasses(idx: number) {
+    if (idx === hoveredId) return 'px-1 py-1/2 bg-primary text-white border-b cursor-pointer';
+
+    return 'px-1 py-1/2 hover:bg-secondary border-b cursor-pointer';
+  }
 
   return <div className="flex flex-col w-full h-full">
     <div className="grid w-full max-w-sm items-center gap-1.5 pb-4">
@@ -42,8 +49,11 @@ export function DetectionsList(props: DetectionListProps) {
         {
           (filtered || []).sort((i, j) => i.score > j.score ? -1 : 1).map((i, idx) => {
             return <li key={idx}
-              onClick={() => setHovered(filtered[idx])}
-              className="px-1 py-1/2 hover:bg-primary/50 border-b cursor-pointer"
+              onClick={() => {
+                setHovered(filtered[idx]);
+                setHoveredId(idx);
+              }}
+              className={getItemClasses(idx)}
             >{i.label} ({round(i.score, 3)})</li>
           })
         }

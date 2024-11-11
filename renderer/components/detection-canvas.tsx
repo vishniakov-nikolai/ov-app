@@ -13,9 +13,8 @@ export function DetectionCanvas({ data, img, hovered }: DetectionCanvasProps) {
   const canvasRef = useRef(null);
 
   useEffect(() => {
-    //Our draw come here
     render();
-  }, [render, hovered]);
+  }, [data, hovered]);
 
   function render() {
     const canvas = canvasRef.current;
@@ -30,7 +29,7 @@ export function DetectionCanvas({ data, img, hovered }: DetectionCanvasProps) {
     if (!data?.length) return;
 
     ctx.strokeStyle = 'blue';
-    ctx.lineWidth = originalImg.width*1/100;
+    ctx.lineWidth = originalImg.width*0.5/100;
 
     data.forEach(({ box }) => {
       printBox(ctx, box.xmin, box.ymin, box.xmax, box.ymax);
@@ -40,7 +39,7 @@ export function DetectionCanvas({ data, img, hovered }: DetectionCanvasProps) {
       const { xmin, xmax, ymin, ymax } = hovered.box;
 
       ctx.strokeStyle = 'red';
-      ctx.lineWidth = originalImg.width*2/100;
+      ctx.lineWidth = originalImg.width*1/100;
 
       printBox(ctx, xmin, ymin, xmax, ymax);
     }
