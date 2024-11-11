@@ -13,6 +13,7 @@ import { DetectionCanvas } from '../components/detection-canvas';
 import { DetectionsList } from '../components/detections-list';
 import { Header } from '../components/header';
 import { ErrorModal } from '../components/error-modal';
+import ImgHistory from '../components/img-history';
 
 const DEFAULT_DEVICE = 'CPU';
 const TASK_NAME = 'Object Detection';
@@ -32,6 +33,7 @@ export default function ImageSegmentationPage() {
   const [hoveredResult, setHoveredResult] = useState<IDetectionResult>(null);
   const [errorMessage, setErrorMessage] = useState('');
   const [showError, setShowError] = useState(false);
+  const [imgHistory, setImgHistory] = useState([]);
 
   useEffect(() => {
     if (!modelName || !selectedDevice) return;
@@ -43,11 +45,9 @@ export default function ImageSegmentationPage() {
     return window.ipc.on(UI.END.SELECT_IMG, (imgPath) => {
       if (!imgPath) return;
 
-      setHoveredResult(null);
-      setSelectedImg(imgPath);
       initiateInference(imgPath);
     });
-  }, [selectedDevice]);
+  }, [selectedDevice, imgHistory]);
   useEffect(() => {
     return window.ipc.on(UI.START.INFERENCE, () => {
       console.log('=== Inference running...');
@@ -80,12 +80,25 @@ export default function ImageSegmentationPage() {
   }, [selectedDevice]);
 
   function initiateInference(imgPath) {
+    pushToHistory(imgPath);
+    setSelectedImg(imgPath);
+
+    setHoveredResult(null);
     setDetectionResult(null);
     setInferenceTime(null);
 
     window.ipc.send(BE.START.OV.INFERENCE, {
       value: imgPath,
     });
+  }
+
+  function pushToHistory(imgPath) {
+    const HISTORY_SIZE = 5;
+    const updated = [...imgHistory, imgPath];
+
+    if (updated.length > HISTORY_SIZE) updated.shift();
+
+    setImgHistory(updated);
   }
 
   return (
@@ -110,17 +123,20 @@ export default function ImageSegmentationPage() {
               </li>
             </ul>
 
-            <div className="mb-5">
+            <div className="mb-5 flex">
               <Button
                 onClick={() => window.ipc.send(BE.START.OV.SELECT_IMG)}
                 className="mr-2"
               >Select Image</Button>
-              { selectedImg &&
-                <Button
-                  variant="secondary"
-                  onClick={() => { initiateInference(selectedImg) }}
-                >Repeat Inference</Button>
-              }
+              <ImgHistory
+                items={imgHistory}
+                selectItem={initiateInference}
+                removeItem={(path) => {
+                  const updated = imgHistory.filter((_, idx) => idx !== path);
+
+                  setImgHistory(updated);
+                }}
+              />
             </div>
           </fieldset>
           <div className="border border-gray flex min-h-80 grow">
