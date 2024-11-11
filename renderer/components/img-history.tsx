@@ -17,7 +17,7 @@ export default function ImageHistory(props: ImageHistoryProps) {
   return (
     <ul className="flex flex-wrap">
       {reversedItems.map((imgPath, idx) => (
-        <li key={idx} className="mr-2 mb-2">
+        <li key={idx} className="mr-2">
           <div
             onClick={() => selectItem(imgPath)}
             className="relative w-10 h-10 cursor-pointer border hover:border-primary group overflow-hidden"

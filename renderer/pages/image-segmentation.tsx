@@ -43,7 +43,7 @@ export default function ImageSegmentationPage() {
     return window.ipc.on(UI.END.SELECT_IMG, (imgPath) => {
       if (!imgPath) return;
 
-      imageSelected(imgPath);
+      initiateInference(imgPath);
     });
   }, [selectedDevice, imgHistory]);
   useEffect(() => {
@@ -78,6 +78,9 @@ export default function ImageSegmentationPage() {
   }, [selectedDevice]);
 
   function initiateInference(imgPath) {
+    pushToHistory(imgPath);
+    setSelectedImg(imgPath);
+
     setSegmentationResult(null);
     setInferenceTime(null);
 
@@ -93,12 +96,6 @@ export default function ImageSegmentationPage() {
     if (updated.length > HISTORY_SIZE) updated.shift();
 
     setImgHistory(updated);
-  }
-
-  function imageSelected(imgPath) {
-    pushToHistory(imgPath);
-    setSelectedImg(imgPath);
-    initiateInference(imgPath);
   }
 
   return (
@@ -130,7 +127,7 @@ export default function ImageSegmentationPage() {
               >Select Image</Button>
               <ImgHistory
                 items={imgHistory}
-                selectItem={imageSelected}
+                selectItem={initiateInference}
                 removeItem={(path) => {
                   const updated = imgHistory.filter((_, idx) => idx !== path);
 
