@@ -11,6 +11,7 @@ import { BE, UI } from '../../constants';
 import DistributionGraph from '../components/distribution-graph';
 import { Header } from '../components/header';
 import { ErrorModal } from '../components/error-modal';
+import ImgHistory from '../components/img-history';
 
 const DEFAULT_DEVICE = 'CPU';
 
@@ -24,6 +25,7 @@ export default function ImageClassificationPage() {
   const [selectedDevice, setSelectedDevice] = useState(DEFAULT_DEVICE);
   const [errorMessage, setErrorMessage] = useState('');
   const [showError, setShowError] = useState(false);
+  const [imgHistory, setImgHistory] = useState([]);
 
   useEffect(() => {
     if (!modelName || !selectedDevice) return;
@@ -35,10 +37,9 @@ export default function ImageClassificationPage() {
     return window.ipc.on(UI.END.SELECT_IMG, (imgPath) => {
       if (!imgPath) return;
 
-      setSelectedImg(imgPath);
       initiateInference(imgPath);
     });
-  }, [selectedDevice]);
+  }, [selectedDevice, imgHistory]);
   useEffect(() => {
     return window.ipc.on(UI.START.INFERENCE, () => {
       console.log('=== Inference running...');
@@ -73,6 +74,8 @@ export default function ImageClassificationPage() {
   }, [selectedDevice]);
 
   function initiateInference(imgPath) {
+    pushToHistory(imgPath);
+    setSelectedImg(imgPath);
     setResultData(null);
     setInferenceTime(null);
 
@@ -82,10 +85,20 @@ export default function ImageClassificationPage() {
     });
   }
 
+
+  function pushToHistory(imgPath) {
+    const HISTORY_SIZE = 5;
+    const updated = [...imgHistory, imgPath];
+
+    if (updated.length > HISTORY_SIZE) updated.shift();
+
+    setImgHistory(updated);
+  }
+
   return (
     <React.Fragment>
       <Head>
-        <title>OpenVINO App | Image Classification | {modelName}</title>
+        <title>{ `OpenVINO App | Image Classification | {modelName}` }</title>
       </Head>
       <div className="content w-auto">
         <Header section="Image Classification Sample" />
@@ -104,17 +117,20 @@ export default function ImageClassificationPage() {
               </li>
             </ul>
 
-            <div className="mb-5">
+            <div className="mb-5 flex">
               <Button
                 onClick={() => window.ipc.send(BE.START.OV.SELECT_IMG)}
                 className="mr-2"
               >Select Image</Button>
-              { selectedImg &&
-                <Button
-                  variant="secondary"
-                  onClick={() => { initiateInference(selectedImg) }}
-                >Rerun Inference</Button>
-              }
+              <ImgHistory
+                items={imgHistory}
+                selectItem={initiateInference}
+                removeItem={(path) => {
+                  const updated = imgHistory.filter((_, idx) => idx !== path);
+
+                  setImgHistory(updated);
+                }}
+              />
             </div>
           </fieldset>
           <div className="border border-gray flex min-h-80">
