@@ -12,6 +12,7 @@ import DistributionGraph from '../components/distribution-graph';
 import { Header } from '../components/header';
 import { ErrorModal } from '../components/error-modal';
 import ImgHistory from '../components/img-history';
+import TakePhotoBtn from '../components/take-photo-btn';
 
 const DEFAULT_DEVICE = 'CPU';
 
@@ -122,6 +123,7 @@ export default function ImageClassificationPage() {
                 onClick={() => window.ipc.send(BE.START.OV.SELECT_IMG)}
                 className="mr-2"
               >Select Image</Button>
+              <TakePhotoBtn />
               <ImgHistory
                 items={imgHistory}
                 selectItem={initiateInference}
